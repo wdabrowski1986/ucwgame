@@ -99,7 +99,7 @@
 
     <script>window.onload = function() { App.loadHistory(); };</script>
 
-    <!-- Runtime loader check + mobile-friendly error logging -->
+    <!-- Runtime loader check + deeper diagnostics for mobile -->
     <script>
     (function(){
         const startBtn = document.querySelector('#start-screen .btn-menu');
@@ -109,7 +109,7 @@
         let details = document.getElementById('error-log');
         if(!details){
             const wrap = document.createElement('div');
-            wrap.innerHTML = '<details id="error-log" style="display:none;margin-top:8px;color:#faa"><summary style="cursor:pointer">View debug details</summary><pre id="error-pre" style="white-space:pre-wrap;color:#ddd;background:rgba(0,0,0,0.25);padding:8px;border-radius:6px;margin-top:8px;max-height:200px;overflow:auto;"></pre></details>';
+            wrap.innerHTML = '<details id="error-log" style="display:none;margin-top:8px;color:#faa"><summary style="cursor:pointer">View debug details</summary><pre id="error-pre" style="white-space:pre-wrap;color:#ddd;background:rgba(0,0,0,0.25);padding:8px;border-radius:6px;margin-top:8px;max-height:300px;overflow:auto;"></pre></details>';
             const startScreen = document.getElementById('start-screen');
             startScreen.appendChild(wrap);
             details = document.getElementById('error-log');
@@ -176,19 +176,49 @@
             } catch(e){ origConsoleError && origConsoleError('Console hook failed', e); }
         };
 
-        // Quick sanity checks: missing scripts or App not initialized
+        // Deep diagnostics when App is missing
+        function probeScripts(scripts){
+            const results = [];
+            const seq = scripts.reduce((p, s) => p.then(() => fetch(s).then(r => r.text().then(t => ({src:s, ok:r.ok, status:r.status, type:r.headers.get('content-type'), snippet: t.slice(0,800)})).catch(e => ({src:s, ok:false, status:'network error', err: String(e)}))).catch(e => ({src:s, ok:false, status:'fetch failed', err:String(e)}))), Promise.resolve());
+            return seq;
+        }
+
         if(!window.App || typeof window.App.init !== 'function'){
             const scripts = ['JS/moves.js', 'JS/secrets.js', 'JS/mechanics.js'];
+            // First do HEAD checks
             Promise.all(scripts.map(s => fetch(s, { method: 'HEAD' }).then(r => ({src: s, ok: r.ok, status: r.status})).catch(e => ({src: s, ok: false, status: 'network error'}))))
             .then(results => {
                 const missing = results.filter(r => !r.ok);
                 if(missing.length){
                     showError('Loading error: missing script(s): ' + missing.map(m=>m.src+ ' ('+m.status+')').join(', ')+'. Check file paths and casing.');
-                } else {
-                    showError('App did not initialize correctly. Check debug details for stack traces.');
+                    if(pre) pre.textContent = 'HEAD check results:\n' + JSON.stringify(results, null, 2) + '\n\n' + (pre.textContent || '');
+                    return;
                 }
-            });
+                // If all HEADs ok, fetch full files to inspect content (detect HTML 200 pages, gzips, etc.)
+                Promise.all(scripts.map(s => fetch(s).then(r => r.text().then(t => ({src:s, status:r.status, ok:r.ok, type:r.headers.get('content-type'), snippet: t.slice(0,1200)})).catch(e => ({src:s, ok:false, err:String(e)}))).catch(e => ({src:s, ok:false, err:String(e)}))))
+                .then(full => {
+                    // Show brief script tag DOM info
+                    const scriptTags = Array.from(document.querySelectorAll('script')).map(el => ({src: el.getAttribute('src'), async: el.async, defer: el.defer}));
+                    if(pre) pre.textContent = 'Script tags on page:\n' + JSON.stringify(scriptTags, null, 2) + '\n\nFetch results:\n' + JSON.stringify(full, null, 2) + '\n\n' + (pre.textContent || '');
+
+                    // If content looks like HTML rather than JS, warn
+                    const htmlLike = full.filter(f => f.ok && f.type && f.type.indexOf('text/html') !== -1);
+                    if(htmlLike.length){
+                        showError('Scripts returned HTML (likely 404 page). Check file paths and casing.', JSON.stringify(htmlLike, null, 2));
+                        return;
+                    }
+
+                    // If scripts fetched ok but App still missing, maybe execution was blocked; show message
+                    showError('All scripts fetched successfully but App is not present. There may be a runtime error during parsing/execution. Check debug details for snippets and ensure no CSP or content transformations are happening.');
+                });
+            }).catch(e => showError('Error while probing scripts: ' + String(e), String(e)));
         }
+
+        // Also display basic environment info
+        try{
+            const nav = navigator.userAgent + ' | platform:' + navigator.platform + ' | vendor:' + navigator.vendor;
+            if(pre) pre.textContent = 'Environment:\n' + nav + '\n\n' + (pre.textContent || '');
+        }catch(e){}
     })();
     </script>
 </body>
