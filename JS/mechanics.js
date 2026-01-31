@@ -276,7 +276,7 @@ const App = {
     },
 
     triggerStripEvent: function(player, item) {
-        document.getElementById('controls-area').style.display = 'none';
+        // Keep controls visible; show overlay above arena but beneath sticky controls on mobile
         const ol = document.getElementById('strip-screen');
         ol.style.display = 'flex';
         document.getElementById('strip-player-name').innerText = player.toUpperCase();
@@ -286,7 +286,6 @@ const App = {
 
     confirmStrip: function() {
         document.getElementById('strip-screen').style.display = 'none';
-        document.getElementById('controls-area').style.display = 'flex';
         this.announce("Resume Match!", 'normal');
         
         // Forced Swap after Strip Event
@@ -296,7 +295,7 @@ const App = {
 
     // --- PINFALL & EVENTS ---
     startPinfall: function() {
-        document.getElementById('controls-area').style.display = 'none';
+        // Keep controls visible; show kickout overlay above arena but beneath sticky controls on mobile
         const overlay = document.getElementById('kickout-overlay');
         overlay.style.display = 'flex';
         
@@ -351,7 +350,6 @@ const App = {
         this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
         
         setTimeout(() => {
-            document.getElementById('controls-area').style.display = 'flex';
             this.nextRound();
         }, 2000);
     },
@@ -366,7 +364,8 @@ const App = {
         }
 
         const reward = DATA.sensual[Math.floor(Math.random() * DATA.sensual.length)];
-        document.getElementById('controls-area').style.opacity = '0'; 
+        // Keep controls visible but dim during sensual reward
+        document.getElementById('controls-area').style.opacity = '0.25'; 
         this.announce(`BONUS: ${reward.name}`);
         document.getElementById('sub-text').innerText = reward.desc;
         document.body.style.background = "#1a0b2e"; // Purple tint
