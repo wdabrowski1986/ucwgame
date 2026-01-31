@@ -121,9 +121,9 @@
             if(errEl){ errEl.style.display = 'block'; errEl.innerText = msg; }
             if(pre){ pre.textContent = (detail ? detail + '\n\n' : '') + (pre.textContent || ''); details.style.display = 'block'; }
             if(startBtn){ startBtn.disabled = true; }
-            // Also log to console for remote debugging
-            console.error(msg);
-            if(detail) console.error(detail);
+            // Also log to console for remote debugging (use original to avoid recursion)
+            origConsoleError && origConsoleError(msg);
+            if(detail && origConsoleError) origConsoleError(detail);
         }
 
         // Global error handlers to capture runtime issues (works without DevTools)
@@ -142,10 +142,14 @@
             } catch(ex) { showError('Unhandled promise rejection occurred.'); }
         });
 
-        // Wrap console.error so we capture messages too
-        const origConsoleError = console.error.bind(console);
+        // Wrap console.error so we capture messages too (append to the on-page details log; avoid calling showError)
+        const origConsoleError = console.error && console.error.bind(console);
         console.error = function(...args){
-            try { origConsoleError(...args); showError('Console: ' + args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ')); } catch(e){ origConsoleError('Console hook failed'); }
+            try {
+                origConsoleError && origConsoleError(...args);
+                const text = 'Console: ' + args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+                if(pre){ pre.textContent = text + '\n\n' + (pre.textContent || ''); details.style.display = 'block'; }
+            } catch(e){ origConsoleError && origConsoleError('Console hook failed', e); }
         };
 
         // Quick sanity checks: missing scripts or App not initialized
