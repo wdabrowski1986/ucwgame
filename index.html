@@ -142,13 +142,37 @@
             } catch(ex) { showError('Unhandled promise rejection occurred.'); }
         });
 
-        // Wrap console.error so we capture messages too (append to the on-page details log; avoid calling showError)
+        // Wrap console.error with dedupe + ignore rules to avoid flooding the on-page log
         const origConsoleError = console.error && console.error.bind(console);
+        let lastConsoleMsg = null;
+        let consoleRepeatCount = 0;
         console.error = function(...args){
             try {
                 origConsoleError && origConsoleError(...args);
-                const text = 'Console: ' + args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
-                if(pre){ pre.textContent = text + '\n\n' + (pre.textContent || ''); details.style.display = 'block'; }
+                const text = args.map(a => {
+                    try { return (typeof a === 'string' ? a : JSON.stringify(a)); } catch(e) { return String(a); }
+                }).join(' ');
+
+                // Ignore messages that clearly originate from our own logging wrapper
+                if (text.startsWith('Console:')) return;
+
+                // Dedupe repeated messages to avoid spam
+                if (text === lastConsoleMsg) {
+                    consoleRepeatCount++;
+                    if (pre) {
+                        // Update the first line to show repetition count
+                        const top = `Last console message: ${text} (x${consoleRepeatCount})`;
+                        const rest = (pre.textContent || '').split('\n\n').slice(1).join('\n\n');
+                        pre.textContent = top + '\n\n' + rest;
+                        details.style.display = 'block';
+                    }
+                    return;
+                }
+
+                // New message
+                lastConsoleMsg = text;
+                consoleRepeatCount = 1;
+                if (pre) { pre.textContent = 'Last console message: ' + text + '\n\n' + (pre.textContent || ''); details.style.display = 'block'; }
             } catch(e){ origConsoleError && origConsoleError('Console hook failed', e); }
         };
 
