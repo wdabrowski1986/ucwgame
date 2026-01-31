@@ -26,13 +26,16 @@ const App = {
     init: async function() {
         this.state.silentMode = document.getElementById('silent-mode').checked;
         
-        // Samsung/Android Optimizations
-        try {
-            if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-            if ('wakeLock' in navigator) await navigator.wakeLock.request('screen');
-        } catch(e) { console.log("Wake Lock/Fullscreen not supported"); }
-        
+        // Hide start screen immediately to avoid blocking on mobile when fullscreen/wakeLock prompt appears
         document.getElementById('start-screen').style.display = 'none';
+        
+        // Samsung/Android Optimizations (don't await; run async and ignore errors so init continues)
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen failed", e));
+        }
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').catch(e => console.log("WakeLock failed", e));
+        }
         
         // 1. SELECT STIPULATION
         const keys = Object.keys(STIPULATIONS);
