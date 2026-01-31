@@ -564,3 +564,6 @@ const App = {
         bar.style.transition = 'none'; bar.style.width = w;
     }
 };
+
+// Ensure `App` is available as a property on `window` so inline handlers (onclick="App...") work
+if (typeof window !== 'undefined') window.App = App;
