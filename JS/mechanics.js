@@ -102,12 +102,22 @@ const App = {
         document.getElementById('event-badge').style.display = this.state.isFinisher ? 'block' : 'none';
         document.getElementById('event-badge').innerText = this.state.isFinisher ? 'FINISHER' : 'MOVE';
         
-        // Image Loading with Fallback
+        // Image Loading with Fallback and smooth fade
         const img = document.getElementById('main-image');
-        img.src = move.img; 
-        img.onerror = function() {
-            this.src = `https://placehold.co/600x400/111/fff?text=${move.name.replace(/ /g, '+')}`;
+        // Reset visibility and handlers
+        img.classList.remove('main-visible');
+        img.onload = function() {
+            // Fade in when the image has loaded
+            this.classList.add('main-visible');
         };
+        img.onerror = function() {
+            // prevent infinite loop if placeholder fails
+            this.onerror = null;
+            this.src = `https://placehold.co/600x400/111/fff?text=${encodeURIComponent(move.name)}`;
+            this.classList.add('main-visible');
+        };
+        // Set new source (this will trigger onload or onerror)
+        img.src = move.img; 
 
         // --- SETUP PHASE ---
         this.state.isSetupPhase = true;
@@ -512,6 +522,11 @@ const App = {
     resetUI: function() {
         document.getElementById('controls-area').style.opacity = '1';
         document.getElementById('controls-area').style.display = 'flex';
+        
+        // Hide main image between moves for a cleaner transition (fade-out then remove)
+        const _img = document.getElementById('main-image');
+        _img.classList.remove('main-visible');
+        setTimeout(() => { _img.style.display = 'none'; }, 400);
         
         // --- BUTTON TEXT RESET ---
         document.getElementById('btn-success').innerText = "SUBMITTED";

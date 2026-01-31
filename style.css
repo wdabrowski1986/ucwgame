@@ -186,7 +186,16 @@ body {
     object-fit: cover; margin-bottom: 25px;
     border: 1px solid rgba(255,255,255,0.1);
     animation: breathe 4s infinite ease-in-out;
+    opacity: 0; /* start hidden for fade-in */
+    transform: scale(1);
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
+
+/* Hide the main image while it has no valid src to prevent the broken image icon */
+#main-image[src=""] { display: none; }
+
+/* Visible state applied by JS to fade the image in */
+#main-image.main-visible { opacity: 1; transform: scale(1.01); display: block; }
 @keyframes breathe {
     0% { transform: scale(1); border-color: rgba(255,255,255,0.1); }
     50% { transform: scale(1.01); border-color: var(--active-color); }
