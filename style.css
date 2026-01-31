@@ -1,0 +1,324 @@
+/* --- MIDNIGHT LUXURY & SEDUCTION THEME --- */
+:root {
+    --p1-color: #00f2ea; /* Electric Cyan */
+    --p2-color: #ff0050; /* Seductive Red */
+    --gold: #d4af37;     /* Champagne Gold */
+    --glass: rgba(10, 0, 0, 0.85); /* Darker Glass */
+    --glass-border: rgba(255, 0, 80, 0.3); /* Red Tint Border */
+    --blur: blur(16px);
+    --danger-red: #ff0050;
+    --deep-red: #4a0018;
+    --active-color: #ffffff; /* Changes dynamically via JS */
+}
+
+body {
+    background-color: black;
+    /* Deep Seductive Gradient Background */
+    background: linear-gradient(-45deg, #0f0c29, #200110, #24243e, #000000);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+    margin: 0; overflow: hidden;
+    display: flex; flex-direction: column; height: 100vh;
+    user-select: none; -webkit-user-select: none;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* --- THE START SCREEN (SEDUCTIVE OVERHAUL) --- */
+#start-screen {
+    /* Dangerous Vignette Background */
+    background: radial-gradient(circle at center, #2b0000 0%, #000000 90%);
+    animation: dangerPulse 5s infinite alternate;
+}
+
+@keyframes dangerPulse {
+    0% { box-shadow: inset 0 0 100px #000; }
+    100% { box-shadow: inset 0 0 200px #4a0018; }
+}
+
+.main-title { 
+    font-family: 'Cinzel', serif; 
+    font-size: 3.5rem; 
+    line-height: 0.9;
+    text-align: center;
+    color: white; 
+    text-transform: uppercase;
+    /* Neon Glow Effect */
+    text-shadow: 
+        0 0 10px var(--danger-red), 
+        0 0 20px var(--danger-red), 
+        0 0 40px var(--deep-red);
+    margin-bottom: 40px;
+    letter-spacing: 2px;
+}
+
+.belt-display {
+    border: 1px solid var(--glass-border); 
+    background: rgba(0, 0, 0, 0.6);
+    padding: 30px; 
+    border-radius: 15px; 
+    margin-bottom: 50px; 
+    width: 85%;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 0 30px rgba(255, 0, 80, 0.1);
+}
+
+.belt-label { 
+    color: #888; font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; 
+}
+
+#champ-name { 
+    color: white; font-size: 2.2rem; font-family: 'Cinzel', serif; 
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+#champ-stats { color:#ccc; font-size:0.9rem; margin-top:5px; font-weight: 300; }
+
+.settings-row { margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+.settings-row label { font-size:0.9rem; color:#aaa; letter-spacing: 1px; }
+.settings-row input { transform: scale(1.3); accent-color: var(--danger-red); }
+
+/* THE "HEARTBEAT" START BUTTON */
+.btn-menu {
+    font-family: 'Montserrat', sans-serif; 
+    padding: 25px 60px; 
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, var(--danger-red), #990033);
+    color: white; 
+    border: none; 
+    border-radius: 50px; 
+    font-weight: 800; 
+    letter-spacing: 3px;
+    box-shadow: 0 0 30px rgba(255, 0, 80, 0.4);
+    margin-bottom: 30px; 
+    cursor: pointer; 
+    text-transform: uppercase;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: heartbeat 2s infinite ease-in-out;
+}
+
+@keyframes heartbeat {
+    0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 80, 0.4); }
+    15% { transform: scale(1.05); box-shadow: 0 0 40px rgba(255, 0, 80, 0.7); }
+    30% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 80, 0.4); }
+    45% { transform: scale(1.05); box-shadow: 0 0 40px rgba(255, 0, 80, 0.7); }
+    60% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 80, 0.4); }
+    100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 80, 0.4); }
+}
+
+.btn-menu:active { transform: scale(0.95); box-shadow: 0 0 10px var(--danger-red); }
+
+.btn-reset { 
+    background: none; border: none; 
+    color: #555; font-size: 0.7rem; letter-spacing: 1px;
+    margin-top: 20px; text-transform: uppercase; opacity: 0.6; cursor: pointer;
+}
+
+/* --- HUD (The Glass Bar) --- */
+#hud {
+    display: flex; justify-content: space-between; padding: 20px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+    height: 12vh; z-index: 10;
+}
+
+.player-card { 
+    width: 45%; display: flex; flex-direction: column; justify-content: center; 
+    opacity: 0.5; transition: opacity 0.5s; 
+}
+.right-align { align-items: flex-end; text-align: right; }
+
+/* Active Player Glows */
+.player-card.active-turn { opacity: 1; text-shadow: 0 0 15px currentColor; }
+
+.name-tag { 
+    font-family: 'Cinzel', serif; font-size: 1.1rem; letter-spacing: 2px; 
+    margin-bottom: 5px; color: white; font-weight: 700; 
+}
+
+.stats-tag { font-size: 0.65rem; color: #888; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; }
+.clothing-tag { font-size: 0.6rem; color: var(--danger-red); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+
+/* Elegant Slanted Health Bars */
+.bar-frame { 
+    width: 100%; height: 6px; background: rgba(255,255,255,0.1); 
+    border-radius: 2px; overflow: hidden; position: relative;
+    transform: skewX(-15deg); border: 1px solid rgba(255,255,255,0.1);
+}
+
+.health-fill { height: 100%; width: 100%; transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+#p1-bar { background: var(--p1-color); box-shadow: 0 0 10px var(--p1-color); }
+#p2-bar { background: var(--p2-color); box-shadow: 0 0 10px var(--p2-color); }
+
+.critical { animation: pulse-red 1s infinite; }
+@keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* --- ARENA (The Stage) --- */
+#arena {
+    flex-grow: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; padding: 20px;
+}
+
+#stipulation-banner {
+    font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; 
+    letter-spacing: 3px; margin-bottom: 15px; 
+    border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;
+}
+
+#event-badge {
+    background: var(--danger-red); color: white; font-family: 'Cinzel';
+    padding: 5px 20px; font-weight: bold; font-size: 0.8rem;
+    box-shadow: 0 0 20px var(--danger-red); margin-bottom: 20px; display: none;
+    letter-spacing: 2px;
+}
+
+/* Breathing Image */
+#main-image {
+    max-width: 90%; max-height: 40vh;
+    border-radius: 10px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    object-fit: cover; margin-bottom: 25px;
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: breathe 4s infinite ease-in-out;
+}
+@keyframes breathe {
+    0% { transform: scale(1); border-color: rgba(255,255,255,0.1); }
+    50% { transform: scale(1.01); border-color: var(--active-color); }
+    100% { transform: scale(1); border-color: rgba(255,255,255,0.1); }
+}
+
+#instruction-text { 
+    font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.8rem; 
+    text-align: center; line-height: 1.1; margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    /* Gradient Text Fix */
+    background: -webkit-linear-gradient(#fff, #999);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+#sub-text { 
+    color: rgba(255,255,255,0.6); font-size: 0.9rem; font-weight: 300; 
+    text-align: center; max-width: 80%; line-height: 1.4; 
+}
+
+/* --- CONTROLS (Glass Buttons) --- */
+#controls-area { 
+    height: 25vh; display: flex; flex-wrap: wrap; 
+    width: 100%; gap: 15px; padding: 20px; box-sizing: border-box; 
+    background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+}
+
+.btn-game {
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    color: white; font-family: 'Montserrat', sans-serif; font-weight: 600;
+    font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;
+    border-radius: 12px; position: relative; overflow: hidden;
+    transition: all 0.2s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.btn-game:active { transform: scale(0.96); background: rgba(255,255,255,0.1); }
+
+/* Success Button (Green Glow) */
+#btn-success { 
+    width: 100%; flex-grow: 2; 
+    border-color: rgba(46, 204, 113, 0.4); 
+    color: #2ecc71; 
+    text-shadow: 0 0 10px rgba(46,204,113,0.3); 
+}
+#btn-success:active { background: rgba(46, 204, 113, 0.1); }
+
+/* Reversal Button (Red Glow) */
+#btn-reversal { 
+    width: 48%; 
+    border-color: rgba(255, 0, 80, 0.4); 
+    color: #ff0050; 
+    text-shadow: 0 0 10px rgba(255,0,80,0.3); 
+}
+
+/* Tapout Button (Subtle) */
+#btn-tapout { 
+    width: 48%; 
+    border-color: rgba(255,255,255,0.1); 
+    color: #666; 
+}
+
+/* --- TIMER --- */
+#timer-strip { width: 100%; height: 2px; background: #111; margin-top: auto; }
+#timer-fill { width: 100%; height: 100%; background: var(--p2-color); box-shadow: 0 0 20px var(--p2-color); }
+
+/* --- OVERLAYS --- */
+.overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px);
+    z-index: 100; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+}
+
+/* Strip Overlay */
+#strip-screen { 
+    background: rgba(20, 0, 0, 0.98); 
+    border: 1px solid var(--p2-color); 
+    box-shadow: inset 0 0 100px rgba(255,0,80,0.2); 
+}
+.strip-title { 
+    font-family: 'Cinzel'; font-size: 4rem; color: white; opacity: 0.1; 
+    position: absolute; top: 10%; 
+}
+.strip-subtitle { 
+    font-family: 'Montserrat'; font-size: 1rem; letter-spacing: 5px; 
+    color: var(--p2-color); margin-bottom: 20px; 
+}
+.strip-item { 
+    font-family: 'Cinzel'; font-size: 3.5rem; color: white; 
+    text-shadow: 0 0 20px white; 
+}
+
+/* Kickout Button (Heartbeat style) */
+#kickout-overlay { background: rgba(40, 0, 0, 0.95); }
+#kickout-title { font-family: 'Cinzel'; font-size: 3rem; margin-bottom: 50px; letter-spacing: 10px; }
+#kickout-sub { color: #888; letter-spacing: 2px; }
+
+#btn-kickout {
+    width: 250px; height: 250px; border-radius: 50%;
+    background: radial-gradient(circle, #ff0050, #990030);
+    color: white; font-family: 'Montserrat'; font-size: 2rem; font-weight: 900;
+    border: none; box-shadow: 0 0 60px rgba(255, 0, 80, 0.6);
+    animation: pulse-kickout 0.8s infinite ease-in-out;
+}
+@keyframes pulse-kickout { 
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(255,0,80,0.7); } 
+    50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(255,0,80,1); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(255,0,80,0.7); }
+}
+
+/* Punishment Screen */
+.punish-header { 
+    color: var(--danger-red); font-family:'Cinzel'; font-size: 3rem; 
+    margin-bottom:10px; text-shadow: 0 0 20px var(--danger-red); 
+}
+#punish-msg { font-size: 1.2rem; margin-bottom: 30px; color:#ccc; letter-spacing: 1px; }
+#punish-options { display:flex; flex-direction:column; gap:15px; width: 80%; }
+#punish-options button { 
+    width: 100%; font-size:1rem; padding:15px; 
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+    color: white; font-family: 'Montserrat'; text-transform: uppercase; letter-spacing: 2px;
+}
+#punish-title { color: var(--gold); font-family:'Cinzel'; margin-bottom: 10px; font-size: 1.5rem; }
+#punish-desc { font-size: 1.2rem; padding: 20px; line-height:1.4; color: white; }
+
+/* Animations */
+.shake-screen { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+.flash { animation: flash-anim 0.3s ease-out; }
+@keyframes flash-anim { 0% { background: white; } 100% { background: transparent; } }
