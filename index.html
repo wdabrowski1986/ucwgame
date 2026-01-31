@@ -27,6 +27,7 @@
 
         <button class="btn-menu" onclick="App.init()">START MATCH</button>
         <button onclick="App.resetData()" class="btn-reset">Reset History</button>
+        <p id="load-error" style="display:none;color:#ff8fa3;margin-top:12px;font-weight:700;"></p>
     </div>
 
     <div id="strip-screen" class="overlay" style="display:none;">
@@ -97,5 +98,34 @@
     <script src="JS/mechanics.js"></script>
 
     <script>window.onload = function() { App.loadHistory(); };</script>
+
+    <!-- Runtime loader check: helpful on GitHub Pages to detect missing/case-mismatched files -->
+    <script>
+    (function(){
+        const startBtn = document.querySelector('#start-screen .btn-menu');
+        const errEl = document.getElementById('load-error');
+
+        function showError(msg){
+            console.error(msg);
+            if(errEl){ errEl.style.display = 'block'; errEl.innerText = msg; }
+            if(startBtn){ startBtn.disabled = true; }
+        }
+
+        // Quick sanity checks
+        if(!window.App || typeof window.App.init !== 'function'){
+            // Try to probe expected script files for 404s
+            const scripts = ['JS/moves.js', 'JS/secrets.js', 'JS/mechanics.js'];
+            Promise.all(scripts.map(s => fetch(s, { method: 'HEAD' }).then(r => ({src: s, ok: r.ok, status: r.status})).catch(e => ({src: s, ok: false, status: 'network error'}))))
+            .then(results => {
+                const missing = results.filter(r => !r.ok);
+                if(missing.length){
+                    showError('Loading error: missing script(s): ' + missing.map(m=>m.src+ ' ('+m.status+')').join(', ')+'. Check file paths and casing.');
+                } else {
+                    showError('App did not initialize correctly. Check console for errors.');
+                }
+            });
+        }
+    })();
+    </script>
 </body>
 </html>
