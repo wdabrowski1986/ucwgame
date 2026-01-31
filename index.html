@@ -99,21 +99,57 @@
 
     <script>window.onload = function() { App.loadHistory(); };</script>
 
-    <!-- Runtime loader check: helpful on GitHub Pages to detect missing/case-mismatched files -->
+    <!-- Runtime loader check + mobile-friendly error logging -->
     <script>
     (function(){
         const startBtn = document.querySelector('#start-screen .btn-menu');
         const errEl = document.getElementById('load-error');
 
-        function showError(msg){
-            console.error(msg);
+        // Create a collapsible details log so users can see stack traces on mobile
+        let details = document.getElementById('error-log');
+        if(!details){
+            const wrap = document.createElement('div');
+            wrap.innerHTML = '<details id="error-log" style="display:none;margin-top:8px;color:#faa"><summary style="cursor:pointer">View debug details</summary><pre id="error-pre" style="white-space:pre-wrap;color:#ddd;background:rgba(0,0,0,0.25);padding:8px;border-radius:6px;margin-top:8px;max-height:200px;overflow:auto;"></pre></details>';
+            const startScreen = document.getElementById('start-screen');
+            startScreen.appendChild(wrap);
+            details = document.getElementById('error-log');
+        }
+        const pre = document.getElementById('error-pre');
+
+        function showError(msg, detail){
+            // Show concise message and enable details
             if(errEl){ errEl.style.display = 'block'; errEl.innerText = msg; }
+            if(pre){ pre.textContent = (detail ? detail + '\n\n' : '') + (pre.textContent || ''); details.style.display = 'block'; }
             if(startBtn){ startBtn.disabled = true; }
+            // Also log to console for remote debugging
+            console.error(msg);
+            if(detail) console.error(detail);
         }
 
-        // Quick sanity checks
+        // Global error handlers to capture runtime issues (works without DevTools)
+        window.addEventListener('error', function(e){
+            try {
+                const d = (e.filename ? (e.filename+ ':' + e.lineno + ':' + e.colno + '\n') : '') + (e.error && e.error.stack ? e.error.stack : e.message);
+                showError('Runtime error: ' + e.message, d);
+            } catch (ex) { showError('Runtime error occurred.'); }
+        });
+
+        window.addEventListener('unhandledrejection', function(e){
+            try {
+                const reason = e.reason && (e.reason.message || JSON.stringify(e.reason)) || 'Unknown';
+                const stack = e.reason && e.reason.stack ? e.reason.stack : '';
+                showError('Unhandled promise rejection: ' + reason, stack);
+            } catch(ex) { showError('Unhandled promise rejection occurred.'); }
+        });
+
+        // Wrap console.error so we capture messages too
+        const origConsoleError = console.error.bind(console);
+        console.error = function(...args){
+            try { origConsoleError(...args); showError('Console: ' + args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ')); } catch(e){ origConsoleError('Console hook failed'); }
+        };
+
+        // Quick sanity checks: missing scripts or App not initialized
         if(!window.App || typeof window.App.init !== 'function'){
-            // Try to probe expected script files for 404s
             const scripts = ['JS/moves.js', 'JS/secrets.js', 'JS/mechanics.js'];
             Promise.all(scripts.map(s => fetch(s, { method: 'HEAD' }).then(r => ({src: s, ok: r.ok, status: r.status})).catch(e => ({src: s, ok: false, status: 'network error'}))))
             .then(results => {
@@ -121,7 +157,7 @@
                 if(missing.length){
                     showError('Loading error: missing script(s): ' + missing.map(m=>m.src+ ' ('+m.status+')').join(', ')+'. Check file paths and casing.');
                 } else {
-                    showError('App did not initialize correctly. Check console for errors.');
+                    showError('App did not initialize correctly. Check debug details for stack traces.');
                 }
             });
         }
