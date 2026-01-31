@@ -331,3 +331,56 @@ body {
 @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 .flash { animation: flash-anim 0.3s ease-out; }
 @keyframes flash-anim { 0% { background: white; } 100% { background: transparent; } }
+
+/* --- MOBILE RESPONSIVE TWEAKS --- */
+@media (max-width: 600px) {
+    /* Allow page to scroll on mobile (overlays and long content) */
+    body { overflow: auto; padding-bottom: env(safe-area-inset-bottom, 0); }
+
+    /* Start screen adjustments */
+    .main-title { font-size: 2.2rem; margin-bottom: 20px; }
+    .belt-display { width: 95%; padding: 20px; margin-bottom: 20px; }
+    .settings-row { gap: 8px; }
+    .btn-menu { padding: 18px 30px; font-size: 1.3rem; width: 100%; border-radius: 40px; }
+
+    /* HUD & arena spacing */
+    #hud { height: auto; padding: 12px; }
+    .player-card { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+    #arena { padding: 12px; }
+    #main-image { max-height: 28vh; }
+    #instruction-text { font-size: 1.4rem; }
+
+    /* Controls become sticky at the bottom and stack vertically for comfortable tapping */
+    #controls-area {
+        position: fixed;
+        left: 0; right: 0;
+        bottom: calc(env(safe-area-inset-bottom, 0) + 8px);
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0));
+        gap: 12px; display: flex; flex-direction: column; align-items: stretch;
+        z-index: 50;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+        background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.6));
+    }
+
+    .btn-game { min-height: 56px; font-size: 1.05rem; }
+    #btn-success { width: 100%; }
+    #btn-reversal, #btn-tapout { width: 100%; }
+
+    /* Hide thin timer at bottom to reduce clutter on small screens */
+    #timer-strip { display: none; }
+
+    /* Make overlays scrollable on mobile and respect safe area */
+    .overlay { padding: 16px; -webkit-overflow-scrolling: touch; overflow: auto; }
+
+    /* Punishment modal adjustments */
+    #punish-options { width: 100%; }
+    .punish-header { font-size: 2.2rem; }
+}
+
+/* Very small screens (phones) */
+@media (max-width: 420px) {
+    .main-title { font-size: 1.9rem; }
+    .btn-menu { font-size: 1.15rem; padding: 14px 18px; }
+    #main-image { max-height: 24vh; }
+    #instruction-text { font-size: 1.2rem; }
+}
