@@ -59,6 +59,8 @@
         </div>
     </div>
 
+    <!-- Main content container (constrains width on large screens) -->
+    <div class="page-container">
     <div id="hud">
         <div class="player-card">
             <div class="name-tag" style="color:var(--p1-color)">WAYNE <span id="p1-falls"></span></div>
@@ -92,6 +94,7 @@
         <button id="btn-reversal" class="btn-game" onclick="App.handleReversal()">REVERSED<br>SURVIVED</button>
         <button id="btn-tapout" class="btn-game" onclick="App.handleTapOut()">I TAP OUT (GIVE UP ROUND)</button>
     </div>
+    </div> <!-- .page-container -->
 
     <script>
         // Script loader tracker: records onload/onerror for each script so we can debug mobile issues
