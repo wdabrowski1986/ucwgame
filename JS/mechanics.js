@@ -468,21 +468,22 @@ const App = {
 
     // --- MINI PUNISHMENT (quick, between-move penalties) ---
     triggerMiniPunishment: function() {
-        // Pick a playful punishment from the list
-        const list = DATA.punishments.playful || ["Mini Tickle (10s)", "Whisper (15s)"];
-        const result = list[Math.floor(Math.random() * list.length)];
+        // Pick a playful punishment from the list (supports structured entries)
+        const list = DATA.punishments.playful || [{name: "Mini Tickle", duration: 10}];
+        const item = list[Math.floor(Math.random() * list.length)];
         const overlay = document.getElementById('mini-punish');
-        document.getElementById('mini-desc').innerText = result;
+        const descText = (typeof item === 'string') ? item : (item.name + (item.duration ? ` (${item.duration}s)` : ''));
+        document.getElementById('mini-desc').innerText = descText;
         overlay.style.display = 'flex';
         document.body.classList.add('overlay-open');
 
-        // Fill timer bar animation
+        // Fill timer bar animation (use item.duration if available, else fallback to configured default)
         const fill = document.getElementById('mini-timer-fill');
-        const dur = this.state.minPunishDuration || 8;
+        const dur = (item && item.duration) ? item.duration : (this.state.minPunishDuration || 8);
         fill.style.transition = 'none'; fill.style.width = '100%'; void fill.offsetWidth;
         fill.style.transition = `width ${dur}s linear`; fill.style.width = '0%';
 
-        this.announce('Mini Punishment: ' + result, 'normal');
+        this.announce('Mini Punishment: ' + descText, 'normal');
 
         setTimeout(() => {
             overlay.style.display = 'none';
@@ -542,7 +543,12 @@ const App = {
         const result = list[Math.floor(Math.random() * list.length)];
         document.getElementById('punish-result').style.display = 'block';
         document.getElementById('punish-title').innerText = cat.toUpperCase();
-        document.getElementById('punish-desc').innerText = result;
+        // Support both string and structured punishment entries
+        if (typeof result === 'string') {
+            document.getElementById('punish-desc').innerText = result;
+        } else {
+            document.getElementById('punish-desc').innerText = result.name + (result.duration ? ` (${result.duration}s)` : '');
+        }
     },
 
     // --- UI HELPERS ---

@@ -31,5 +31,13 @@ DATA.punishments = {
     sensual: ["Sensual Kiss - Kiss for 30s.", "Body Worship - Massage 20s.", "Whisper Desire"],
     domination: ["Bow to Me", "Command & Obey (3 commands)", "Pin Down (20s)", "Surrender Speech"],
     erotic: ["Oral Devotion (1m)", "Truth Time", "Penetration Denied (1m)", "Ride Me (2m)"],
-    playful: ["Tickle Torture (20s)", "Role Reversal (1m)", "Costume Change", "Playful Spank (10)"]
+    // Playful mini-punishments now include structured entries with optional duration in seconds
+    playful: [
+        { name: "Tickle Torture", duration: 20 },
+        { name: "Mini Role Reversal", duration: 45 },
+        { name: "Costume Change", duration: 20 },
+        { name: "Playful Spank", duration: 10 },
+        { name: "Tease & Deny", duration: 15 },
+        { name: "Whisper a Secret", duration: 12 }
+    ]
 };
