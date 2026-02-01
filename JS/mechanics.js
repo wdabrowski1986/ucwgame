@@ -128,6 +128,8 @@ const App = {
         this.state.isSetupPhase = true;
         document.getElementById('controls-area').style.opacity = '0.5';
         document.getElementById('btn-success').disabled = true;
+        // Clear any pending hide timers so the upcoming image stays visible
+        if (this.state.imageHideTimer) { clearTimeout(this.state.imageHideTimer); this.state.imageHideTimer = null; }
         
         // Special Audio for Blindfold Match
         let prefix = "";
@@ -532,7 +534,9 @@ const App = {
         // Hide main image between moves for a cleaner transition (fade-out then remove)
         const _img = document.getElementById('main-image');
         _img.classList.remove('main-visible');
-        setTimeout(() => { _img.style.display = 'none'; }, 400);
+        // Clear any previous hide timer
+        if (this.state.imageHideTimer) clearTimeout(this.state.imageHideTimer);
+        this.state.imageHideTimer = setTimeout(() => { _img.style.display = 'none'; this.state.imageHideTimer = null; }, 400);
         
         // --- BUTTON TEXT RESET ---
         document.getElementById('btn-success').innerText = "SUBMITTED";
