@@ -18,7 +18,6 @@ const WARDROBE = {
 // --- SECRETS LIST ---
 // We append these to the DATA object from moves.js
 DATA.secrets = [
-    { name: "HARDCORE MATCH", desc: "STRIP EVERYTHING. Both players naked immediately." },
     { name: "ROLE SWAP", desc: "Attacker and defender switch roles immediately! Surprise!" },
     { name: "SILENT ROUND", desc: "No talking allowed until the next move is complete." },
     { name: "LIGHTS OUT", desc: "Attacker must close eyes. If you peek, you lose the round." },

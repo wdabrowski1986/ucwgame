@@ -436,10 +436,6 @@ const App = {
         this.announce(`SECRET: ${secret.name}`, 'high');
         document.getElementById('sub-text').innerText = secret.desc;
         
-        if (secret.name === "HARDCORE MATCH") {
-            this.state.p1Layer = 3; this.state.p2Layer = 3;
-            this.updateClothingUI();
-        }
         if (secret.name === "ROLE SWAP") this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
         
         setTimeout(() => { this.announce("Resume Match", 'normal'); this.nextRound(); }, 5000); 
