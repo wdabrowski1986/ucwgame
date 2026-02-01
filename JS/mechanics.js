@@ -20,6 +20,11 @@ const App = {
         minPunishChance: 0.28,
         minPunishDuration: 8,
 
+        // Combo / Momentum
+        combo: 0,                   // current consecutive successful moves by the attacker
+        comboBonusPercent: 0.10,    // 10% extra damage per additional combo step
+        comboMaxMultiplier: 2.0,    // maximum damage multiplier (2x)
+
         p1Layer: 0, p2Layer: 0,
         p1Falls: 0, p2Falls: 0, 
         stipulation: 'STANDARD',
@@ -206,6 +211,8 @@ const App = {
             // --- TIME LIMIT EXPIRED ---
             // Forced swap on stalemate
             this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+            // reset combo momentum on swap
+            this.resetCombo();
             setTimeout(() => this.nextRound(), 2000);
             
         }, seconds * 1000);
@@ -235,6 +242,34 @@ const App = {
         const el = document.getElementById('countdown');
         if (this.state._countdownInterval) { clearInterval(this.state._countdownInterval); this.state._countdownInterval = null; }
         if(el){ el.style.display = 'none'; el.classList.remove('fuse'); el.innerText = ''; }
+    },
+
+    // --- COMBO / MOMENTUM HELPERS ---
+    incrementCombo: function() {
+        this.state.combo = (this.state.combo || 0) + 1;
+        if (this.state.combo < 1) this.state.combo = 1;
+        this.updateComboUI();
+        // Announce notable combo milestones
+        if (this.state.combo >= 2) this.announce(`COMBO x${this.state.combo}!`, 'normal');
+    },
+
+    resetCombo: function() {
+        this.state.combo = 0;
+        this.updateComboUI();
+    },
+
+    updateComboUI: function() {
+        const el = document.getElementById('combo-display');
+        const cnt = document.getElementById('combo-count');
+        if (!el || !cnt) return;
+        if (this.state.combo >= 2) {
+            cnt.innerText = this.state.combo;
+            el.style.display = 'inline-block';
+            el.classList.add('burst');
+            setTimeout(() => el.classList.remove('burst'), 650);
+        } else {
+            el.style.display = 'none';
+        }
     },
 
 
@@ -269,6 +304,9 @@ const App = {
         document.body.classList.add('shake-screen');
         setTimeout(() => document.body.classList.remove('shake-screen'), 400);
 
+        // increment combo for successful move
+        this.incrementCombo();
+
         if (this.state.isFinisher) {
             // Check Match Type logic
             if (this.state.stipulation === 'SUBMISSION') {
@@ -279,8 +317,11 @@ const App = {
             }
         } else {
             // Normal Move Logic
-            // Damage scales with configured maxHealth (use baseDamagePercent)
-            const dmg = Math.round(this.state.baseDamagePercent * this.state.maxHealth);
+            // Damage scales with configured maxHealth and combo multiplier
+            const base = Math.round(this.state.baseDamagePercent * this.state.maxHealth);
+            const mult = 1 + Math.min((this.state.combo - 1) * this.state.comboBonusPercent, this.state.comboMaxMultiplier - 1);
+            const dmg = Math.round(base * mult);
+
             let target = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
             
             if (target === 'cindy') this.state.p2Health -= dmg;
@@ -325,6 +366,8 @@ const App = {
         
         // Forced Swap on Tapout
         this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+        // reset combo momentum on swap
+        this.resetCombo();
         
         this.updateHUD();
         setTimeout(() => this.nextRound(), 2000);
@@ -340,6 +383,8 @@ const App = {
         
         // Switch Roles
         this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+        // reset combo momentum when attacker changes
+        this.resetCombo();
         this.updateHUD();
         
         // Check if damage caused strip
@@ -401,15 +446,8 @@ const App = {
         
         // Forced Swap after Strip Event
         this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
-        this.nextRound();
-    },
-
-    confirmStrip: function() {
-        document.getElementById('strip-screen').style.display = 'none';
-        this.announce("Resume Match!", 'normal');
-        
-        // Forced Swap after Strip Event
-        this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+        // reset combo on swap
+        this.resetCombo();
         this.nextRound();
     },
 
@@ -470,7 +508,8 @@ const App = {
         
         // Successful kickout resets neutral/swaps
         this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
-        
+        // reset combo on swap
+        this.resetCombo();
         setTimeout(() => {
             this.nextRound();
         }, 2000);
@@ -509,6 +548,8 @@ const App = {
              
              // --- FORCED SWAP AFTER REWARD ---
              this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+             // reset combo on swap
+             this.resetCombo();
              this.announce("Roles Switched! Fight!", 'high');
              
              setTimeout(() => this.nextRound(), 1500);
@@ -525,7 +566,7 @@ const App = {
         // Hide controls while secret displays
         document.body.classList.add('overlay-open');
         
-        if (secret.name === "ROLE SWAP") this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+        if (secret.name === "ROLE SWAP") { this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne'; this.resetCombo(); }
         
         setTimeout(() => { this.announce("Resume Match", 'normal'); document.body.classList.remove('overlay-open'); this.nextRound(); }, 5000); 
     },
@@ -555,6 +596,8 @@ const App = {
             document.body.classList.remove('overlay-open');
             // After mini punishment, forced swap and next round
             this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+            // reset combo on swap
+            this.resetCombo();
             this.nextRound();
         }, dur * 1000);
     },
@@ -709,6 +752,9 @@ const App = {
             try { if (typeof this.hideImageZoom === 'function') this.hideImageZoom(); } catch(e) {}
         }
 
+        // Reset combo display when UI resets between rounds
+        this.resetCombo();
+
         document.getElementById('controls-area').style.opacity = '1';
         document.getElementById('controls-area').style.display = 'flex';
         
@@ -744,6 +790,7 @@ const App = {
             p1Card.classList.remove('active-turn');
         }
     },
+
 
 
     stopTimer: function() {
