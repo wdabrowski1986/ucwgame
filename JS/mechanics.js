@@ -172,7 +172,11 @@ const App = {
         void bar.offsetWidth; 
         bar.style.transition = `width ${setupSec}s linear`; bar.style.width = '0%';
 
+        // Show numeric countdown during setup
+        this.startCountdown(setupSec);
+
         this.state.timer = setTimeout(() => {
+            this.stopCountdown();
             this.state.isSetupPhase = false;
             document.getElementById('controls-area').style.opacity = '1';
             document.getElementById('btn-success').disabled = false;
@@ -192,7 +196,11 @@ const App = {
         void bar.offsetWidth; 
         bar.style.transition = `width ${seconds}s linear`; bar.style.width = '0%';
         
+        // Start numeric countdown for action phase
+        this.startCountdown(seconds);
+
         this.state.timer = setTimeout(() => {
+            this.stopCountdown();
             this.announce("Break! Reset Position.", 'normal');
             
             // --- TIME LIMIT EXPIRED ---
@@ -202,6 +210,33 @@ const App = {
             
         }, seconds * 1000);
     },
+
+    // Countdown helpers (numeric display)
+    startCountdown: function(seconds) {
+        this.stopCountdown();
+        const el = document.getElementById('countdown');
+        if(!el) return;
+        let remaining = Math.ceil(seconds);
+        el.innerText = remaining + 's';
+        el.style.display = 'inline-block';
+        el.classList.add('fuse');
+        const self = this;
+        this.state._countdownInterval = setInterval(() => {
+            remaining -= 1;
+            if (remaining <= 0) {
+                self.stopCountdown();
+            } else {
+                el.innerText = remaining + 's';
+            }
+        }, 1000);
+    },
+
+    stopCountdown: function() {
+        const el = document.getElementById('countdown');
+        if (this.state._countdownInterval) { clearInterval(this.state._countdownInterval); this.state._countdownInterval = null; }
+        if(el){ el.style.display = 'none'; el.classList.remove('fuse'); el.innerText = ''; }
+    },
+
 
     // --- IMAGE ZOOM HANDLERS ---
     showImageZoom: function(src) {
@@ -713,6 +748,7 @@ const App = {
         const bar = document.getElementById('timer-fill');
         const w = window.getComputedStyle(bar).width;
         bar.style.transition = 'none'; bar.style.width = w;
+        this.stopCountdown();
     }
 };
 
