@@ -196,6 +196,7 @@ body {
     opacity: 0; /* start hidden for fade-in */
     transform: scale(1);
     transition: opacity 0.4s ease, transform 0.4s ease;
+    cursor: zoom-in;
 }
 
 /* Hide the main image while it has no valid src to prevent the broken image icon */
@@ -203,6 +204,14 @@ body {
 
 /* Visible state applied by JS to fade the image in */
 #main-image.main-visible { opacity: 1; transform: scale(1.01); display: block; }
+
+/* Zoom overlay styles */
+#image-zoom { background: rgba(0,0,0,0.95); z-index: 300; }
+#image-zoom-img { transform: scale(0.98); transition: transform 0.25s ease, opacity 0.25s ease; opacity: 0; }
+#image-zoom.image-visible img { transform: scale(1); opacity: 1; cursor: zoom-out; }
+
+/* Small tweak so clicking the zoom overlay won't accidentally interact with controls below */
+#image-zoom { pointer-events: auto; }
 @keyframes breathe {
     0% { transform: scale(1); border-color: rgba(255,255,255,0.1); }
     50% { transform: scale(1.01); border-color: var(--active-color); }

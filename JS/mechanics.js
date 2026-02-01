@@ -132,18 +132,24 @@ const App = {
         const img = document.getElementById('main-image');
         // Reset visibility and handlers
         img.classList.remove('main-visible');
+        const self = this;
         img.onload = function() {
             // Fade in when the image has loaded
             this.classList.add('main-visible');
+            // Ensure clicking/tapping the image toggles the zoom overlay
+            this.onclick = function(e) { e.stopPropagation(); self.toggleImageZoom(); };
         };
         img.onerror = function() {
             // prevent infinite loop if placeholder fails
             this.onerror = null;
             this.src = `https://placehold.co/600x400/111/fff?text=${encodeURIComponent(move.name)}`;
             this.classList.add('main-visible');
+            this.onclick = function(e) { e.stopPropagation(); self.toggleImageZoom(); };
         };
         // Set new source (this will trigger onload or onerror)
         img.src = move.img; 
+        // Prevent clicks on image during setup hiding phase from accidentally toggling
+        img.addEventListener('touchstart', function(e){ e.stopPropagation(); });
 
         // --- SETUP PHASE ---
         this.state.isSetupPhase = true;
@@ -195,6 +201,30 @@ const App = {
             setTimeout(() => this.nextRound(), 2000);
             
         }, seconds * 1000);
+    },
+
+    // --- IMAGE ZOOM HANDLERS ---
+    showImageZoom: function(src) {
+        const overlay = document.getElementById('image-zoom');
+        const img = document.getElementById('image-zoom-img');
+        img.src = src || document.getElementById('main-image').src;
+        overlay.style.display = 'flex';
+        document.body.classList.add('overlay-open');
+        // apply visible class a tick later to trigger transition
+        setTimeout(() => { overlay.classList.add('image-visible'); }, 10);
+        // Clicking the overlay hides it
+        overlay.onclick = (e) => { e.stopPropagation(); this.hideImageZoom(); };
+    },
+
+    hideImageZoom: function() {
+        const overlay = document.getElementById('image-zoom');
+        overlay.classList.remove('image-visible');
+        setTimeout(() => { overlay.style.display = 'none'; document.body.classList.remove('overlay-open'); }, 220);
+    },
+
+    toggleImageZoom: function() {
+        const overlay = document.getElementById('image-zoom');
+        if (overlay.style.display === 'flex') this.hideImageZoom(); else this.showImageZoom();
     },
 
     // --- INTERACTION HANDLERS ---
