@@ -35,7 +35,8 @@ body {
 
 /* --- THE START SCREEN (SEDUCTIVE OVERHAUL) --- */
 #start-screen {
-    position: relative;
+    /* Make the start screen a full-viewport fixed overlay so it always covers the app */
+    position: fixed; inset: 0; z-index: 400; display: flex; flex-direction: column; align-items: center; justify-content: center;
     /* Use the ring photo as a hero background with a subtle dark overlay for readability */
     background-image: url('images/ring-bg.jpg');
     background-size: cover; background-position: center; background-repeat: no-repeat;
@@ -253,6 +254,10 @@ body {
     display: inline-block; opacity: 0.95;
 }
 
+/* Combo display */
+#combo-display { font-family:'Montserrat'; font-weight:900; color: var(--gold); letter-spacing:2px; margin-top:8px; display:inline-block; padding:6px 12px; border-radius:20px; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); }
+#combo-display .burst { animation: combo-burst 0.6s ease; }
+@keyframes combo-burst { 0% { transform: scale(1); filter: blur(0); } 50% { transform: scale(1.08); filter: blur(0.6px); } 100% { transform: scale(1); filter: blur(0); } }
 /* Small fuse pulse while counting down */
 #countdown.fuse { box-shadow: 0 0 30px rgba(212,175,55,0.25), 0 10px 40px rgba(0,0,0,0.6); }
 
