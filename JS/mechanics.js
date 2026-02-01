@@ -11,6 +11,10 @@ const App = {
         pinHealPercent: 0.08,      // 8% of maxHealth for successful kickout
         sensualHealPercent: 0.07,  // 7% heal during sensual rewards
         
+        // STRIP behavior probabilities (chance for removal when threshold crossed)
+        // Key = layer-to-become (1,2,3). For example, 0.5 means 50% chance to remove to that layer.
+        stripChance: { 1: 0.45, 2: 0.65, 3: 0.9 },
+
         p1Layer: 0, p2Layer: 0,
         p1Falls: 0, p2Falls: 0, 
         stipulation: 'STANDARD',
@@ -20,6 +24,7 @@ const App = {
         roundCount: 0,
         isSetupPhase: false
     },
+
     
     synth: window.speechSynthesis,
 
@@ -276,17 +281,28 @@ const App = {
         else if (health < (0.75 * this.state.maxHealth)) shouldBeLayer = 1;
 
         if (shouldBeLayer > layer) {
-            const item = WARDROBE[player][layer]; 
-            this.triggerStripEvent(player, item);
-            
-            if (player === 'wayne') this.state.p1Layer++; 
-            else this.state.p2Layer++;
-            
-            this.updateClothingUI();
-            return true; // Stop game flow to show overlay
+            // Try removing one layer; the removal happens probabilistically based on stripChance configuration
+            const nextLayer = layer + 1; // this is the layer we'd advance to
+            const chance = (this.state.stripChance && this.state.stripChance[nextLayer]) ? this.state.stripChance[nextLayer] : 1;
+
+            if (Math.random() < chance) {
+                const item = WARDROBE[player][layer];
+                this.triggerStripEvent(player, item);
+
+                if (player === 'wayne') this.state.p1Layer++; 
+                else this.state.p2Layer++;
+
+                this.updateClothingUI();
+                return true; // Stop game flow to show overlay
+            } else {
+                // No strip this time; give a brief notification and continue normally
+                this.announce("Clothes held this time! Keep fighting.", 'normal');
+                return false;
+            }
         }
         return false;
     },
+
 
     triggerStripEvent: function(player, item) {
         // Keep controls visible; show overlay above arena but beneath sticky controls on mobile
