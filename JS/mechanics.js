@@ -647,6 +647,13 @@ const App = {
     },
 
     resetUI: function() {
+        // Ensure any overlay markers are cleared so controls can show
+        if (typeof document !== 'undefined' && document.body) {
+            document.body.classList.remove('overlay-open');
+            // Also hide image zoom if it somehow remained open
+            try { if (typeof this.hideImageZoom === 'function') this.hideImageZoom(); } catch(e) {}
+        }
+
         document.getElementById('controls-area').style.opacity = '1';
         document.getElementById('controls-area').style.display = 'flex';
         
@@ -682,6 +689,7 @@ const App = {
             p1Card.classList.remove('active-turn');
         }
     },
+
 
     stopTimer: function() {
         clearTimeout(this.state.timer);
