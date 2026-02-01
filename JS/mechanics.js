@@ -43,13 +43,54 @@ const App = {
         const stored = localStorage.getItem('ubc_history');
         if (stored) this.state.wins = JSON.parse(stored);
         this.updateHUD();
+        // Load persisted UI settings (break length, silent mode, etc.)
+        try { this.loadSettings(); } catch(e) { console.warn('loadSettings failed', e); }
+    },
+
+    // --- SETTINGS PERSISTENCE ---
+    loadSettings: function() {
+        const s = localStorage.getItem('ubc_settings');
+        if (!s) return;
+        let cfg;
+        try { cfg = JSON.parse(s); } catch(e) { console.warn('Corrupt settings', e); return; }
+        const breakInput = document.getElementById('break-length');
+        if (breakInput && typeof cfg.breakLength !== 'undefined') {
+            breakInput.value = cfg.breakLength;
+            const valEl = document.getElementById('break-length-val'); if (valEl) valEl.innerText = cfg.breakLength + 's';
+            this.state.setupDelaySeconds = parseInt(cfg.breakLength, 10) || this.state.setupDelaySeconds;
+        }
+        const silentChk = document.getElementById('silent-mode');
+        if (silentChk && typeof cfg.silentMode !== 'undefined') { silentChk.checked = !!cfg.silentMode; this.state.silentMode = !!cfg.silentMode; }
+    },
+
+    saveSettings: function() {
+        try {
+            const breakInput = document.getElementById('break-length');
+            const silentChk = document.getElementById('silent-mode');
+            const cfg = {
+                breakLength: breakInput ? parseInt(breakInput.value, 10) : this.state.setupDelaySeconds,
+                silentMode: silentChk ? !!silentChk.checked : !!this.state.silentMode
+            };
+            localStorage.setItem('ubc_settings', JSON.stringify(cfg));
+        } catch(e) { console.warn('saveSettings failed', e); }
     },
 
     init: async function() {
+        // Restore any saved settings from previous sessions
         this.state.silentMode = document.getElementById('silent-mode').checked;
         // Read configured break length if provided on the start screen
         const breakInput = document.getElementById('break-length');
-        if (breakInput) this.state.setupDelaySeconds = parseInt(breakInput.value, 10) || this.state.setupDelaySeconds;
+        if (breakInput) {
+            this.state.setupDelaySeconds = parseInt(breakInput.value, 10) || this.state.setupDelaySeconds;
+            // Ensure visible label updated
+            const valEl = document.getElementById('break-length-val'); if (valEl) valEl.innerText = breakInput.value + 's';
+            // Save changes when user adjusts them
+            breakInput.addEventListener('input', (e) => { if (valEl) valEl.innerText = e.target.value + 's'; this.state.setupDelaySeconds = parseInt(e.target.value, 10) || this.state.setupDelaySeconds; this.saveSettings(); });
+        }
+        const silentChk = document.getElementById('silent-mode');
+        if (silentChk) { silentChk.addEventListener('change', (e) => { this.state.silentMode = !!e.target.checked; this.saveSettings(); }); }
+        // Persist loaded or initial settings
+        this.saveSettings();
         
         // Hide start screen immediately to avoid blocking on mobile when fullscreen/wakeLock prompt appears
         document.getElementById('start-screen').style.display = 'none';
