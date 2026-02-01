@@ -218,6 +218,10 @@ body {
 
 /* Zoom overlay styles */
 #image-zoom { background: rgba(0,0,0,0.95); z-index: 300; }
+#winner-screen { background: rgba(0,0,0,0.95); z-index: 300; text-align:center; }
+#winner-belt { width: 260px; max-width: 70%; height: auto; margin: 10px auto 18px; display:block; transform: translateY(-10px) scale(0.98); opacity: 0; transition: transform 0.45s cubic-bezier(.2,.9,.2,1), opacity 0.45s ease; }
+#winner-screen.show-belt #winner-belt { transform: translateY(0) scale(1); opacity: 1; }
+
 #image-zoom-img { transform: scale(0.98); transition: transform 0.25s ease, opacity 0.25s ease; opacity: 0; }
 #image-zoom.image-visible img { transform: scale(1); opacity: 1; cursor: zoom-out; }
 

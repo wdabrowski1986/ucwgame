@@ -595,7 +595,10 @@ const App = {
             document.body.classList.add('overlay-open');
             // Populate winner overlay and show it
             document.getElementById('winner-name').innerText = `${winner.toUpperCase()}`;
-            document.getElementById('winner-screen').style.display = 'flex';
+            const ws = document.getElementById('winner-screen');
+            ws.style.display = 'flex';
+            // animate belt in
+            ws.classList.add('show-belt');
             // Auto-advance to punishment after delay (optional) - 5s
             if (this._autoPunishTimer) clearTimeout(this._autoPunishTimer);
             this._autoPunishTimer = setTimeout(() => { this.openPunishmentSelection(); }, 5000);
