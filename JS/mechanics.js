@@ -10,7 +10,8 @@ const App = {
         baseDamagePercent: 0.12,   // 12% of maxHealth per successful move
         pinHealPercent: 0.08,      // 8% of maxHealth for successful kickout
         sensualHealPercent: 0.07,  // 7% heal during sensual rewards
-        
+                // How many seconds of break between the 'Get Ready' and 'ACTION' phase
+        setupDelaySeconds: 8,
         // STRIP behavior probabilities (chance for removal when threshold crossed)
         // Key = layer-to-become (1,2,3). For example, 0.5 means 50% chance to remove to that layer.
         stripChance: { 1: 0.45, 2: 0.65, 3: 0.9 },
@@ -37,6 +38,9 @@ const App = {
 
     init: async function() {
         this.state.silentMode = document.getElementById('silent-mode').checked;
+        // Read configured break length if provided on the start screen
+        const breakInput = document.getElementById('break-length');
+        if (breakInput) this.state.setupDelaySeconds = parseInt(breakInput.value, 10) || this.state.setupDelaySeconds;
         
         // Hide start screen immediately to avoid blocking on mobile when fullscreen/wakeLock prompt appears
         document.getElementById('start-screen').style.display = 'none';
@@ -151,11 +155,12 @@ const App = {
         this.announce(`${prefix}${attackerName}, Get Ready... ${move.name}`, 'normal');
         document.getElementById('sub-text').innerText = "Get into position...";
         
-        // Yellow Bar Animation (5s)
+        // Yellow Bar Animation (configurable)
         const bar = document.getElementById('timer-fill');
+        const setupSec = this.state.setupDelaySeconds || 5;
         bar.style.transition = 'none'; bar.style.width = '100%'; bar.style.background = 'yellow';
         void bar.offsetWidth; 
-        bar.style.transition = `width 5s linear`; bar.style.width = '0%';
+        bar.style.transition = `width ${setupSec}s linear`; bar.style.width = '0%';
 
         this.state.timer = setTimeout(() => {
             this.state.isSetupPhase = false;
@@ -167,7 +172,7 @@ const App = {
             
             const actionTime = this.state.isFinisher ? 15 : 45; 
             this.startActionTimer(actionTime);
-        }, 5000);
+        }, setupSec * 1000);
     },
 
     startActionTimer: function(seconds) {

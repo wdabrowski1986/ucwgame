@@ -25,6 +25,12 @@
             <label for="silent-mode">Silent Mode</label>
         </div>
 
+        <div class="settings-row">
+            <label for="break-length">Break Time</label>
+            <input type="range" id="break-length" min="3" max="15" value="8" oninput="document.getElementById('break-length-val').innerText = this.value + 's'">
+            <span id="break-length-val">8s</span>
+        </div>
+
         <button class="btn-menu" onclick="App.init()">START MATCH</button>
         <button onclick="App.resetData()" class="btn-reset">Reset History</button>
         <p id="load-error" style="display:none;color:#ff8fa3;margin-top:12px;font-weight:700;"></p>
