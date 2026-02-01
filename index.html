@@ -49,6 +49,14 @@
         <p id="kickout-sub">ONE TAP TO SURVIVE</p>
     </div>
 
+    <!-- Winner screen shown first when match ends -->
+    <div id="winner-screen" class="overlay" style="display:none;">
+        <h1 class="punish-header">WINNER!</h1>
+        <p id="winner-name" style="font-size:2rem;margin-bottom:8px;color:var(--gold)"></p>
+        <p id="winner-sub" style="color:#ccc;margin-bottom:20px;">Well played. Prepare for punishment.</p>
+        <button class="btn-menu" onclick="App.openPunishmentSelection()">Proceed to Punishment</button>
+    </div>
+
     <div id="punishment-screen" class="overlay" style="display:none;">
         <h1 class="punish-header">GAME OVER!</h1>
         <p id="punish-msg">Select Punishment Category</p>

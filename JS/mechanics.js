@@ -555,16 +555,33 @@ const App = {
         
         this.announce(`WINNER: ${winner.toUpperCase()}!`, 'win');
         setTimeout(() => {
-            // End of match — remove match state and show punishment overlay; hide controls
+            // End of match — remove match state and show winner screen first (controls hidden)
             if (typeof document !== 'undefined' && document.body) document.body.classList.remove('in-match');
             document.body.classList.add('overlay-open');
-            document.getElementById('punishment-screen').style.display = 'flex';
-            document.getElementById('punish-msg').innerText = `${loser} lost. Select Punishment.`;
+            // Populate winner overlay and show it
+            document.getElementById('winner-name').innerText = `${winner.toUpperCase()}`;
+            document.getElementById('winner-screen').style.display = 'flex';
+            // Auto-advance to punishment after delay (optional) - 5s
+            if (this._autoPunishTimer) clearTimeout(this._autoPunishTimer);
+            this._autoPunishTimer = setTimeout(() => { this.openPunishmentSelection(); }, 5000);
         }, 4000);
     },
     
     resetData: function() {
         if(confirm("Reset all history?")) { localStorage.removeItem('ubc_history'); location.reload(); }
+    },
+
+    // Open punishment selection (hide winner screen and show punishment screen)
+    openPunishmentSelection: function() {
+        // clear auto timer if present
+        if (this._autoPunishTimer) { clearTimeout(this._autoPunishTimer); this._autoPunishTimer = null; }
+        document.getElementById('winner-screen').style.display = 'none';
+        // show punishment overlay
+        document.getElementById('punish-result').style.display = 'none';
+        document.getElementById('punish-options').style.display = 'flex';
+        document.getElementById('punishment-screen').style.display = 'flex';
+        document.getElementById('punish-msg').innerText = `Select Punishment.`;
+        // body.overlay-open remains set
     },
 
     spinPunishment: function(cat) {
