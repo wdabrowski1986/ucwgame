@@ -16,6 +16,10 @@ const App = {
         // Key = layer-to-become (1,2,3). For example, 0.5 means 50% chance to remove to that layer.
         stripChance: { 1: 0.45, 2: 0.65, 3: 0.9 },
 
+        // Mini punishment settings (chance to trigger small punishment between moves and duration)
+        minPunishChance: 0.28,
+        minPunishDuration: 8,
+
         p1Layer: 0, p2Layer: 0,
         p1Falls: 0, p2Falls: 0, 
         stipulation: 'STANDARD',
@@ -224,8 +228,13 @@ const App = {
             
             // Heal if both alive
             if (this.state.p1Health > 0 && this.state.p2Health > 0) {
-                // Trigger reward (Swap happens inside here now)
-                this.triggerSensualReward();
+                // Chance to trigger a small playful punishment between moves
+                if (this.state.stipulation !== 'SUDDEN_DEATH' && Math.random() < this.state.minPunishChance) {
+                    this.triggerMiniPunishment();
+                } else {
+                    // Trigger reward (Swap happens inside here now)
+                    this.triggerSensualReward();
+                }
             } else {
                 this.nextRound();
             }
@@ -456,6 +465,33 @@ const App = {
         setTimeout(() => { this.announce("Resume Match", 'normal'); document.body.classList.remove('overlay-open'); this.nextRound(); }, 5000); 
     },
 
+
+    // --- MINI PUNISHMENT (quick, between-move penalties) ---
+    triggerMiniPunishment: function() {
+        // Pick a playful punishment from the list
+        const list = DATA.punishments.playful || ["Mini Tickle (10s)", "Whisper (15s)"];
+        const result = list[Math.floor(Math.random() * list.length)];
+        const overlay = document.getElementById('mini-punish');
+        document.getElementById('mini-desc').innerText = result;
+        overlay.style.display = 'flex';
+        document.body.classList.add('overlay-open');
+
+        // Fill timer bar animation
+        const fill = document.getElementById('mini-timer-fill');
+        const dur = this.state.minPunishDuration || 8;
+        fill.style.transition = 'none'; fill.style.width = '100%'; void fill.offsetWidth;
+        fill.style.transition = `width ${dur}s linear`; fill.style.width = '0%';
+
+        this.announce('Mini Punishment: ' + result, 'normal');
+
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            document.body.classList.remove('overlay-open');
+            // After mini punishment, forced swap and next round
+            this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+            this.nextRound();
+        }, dur * 1000);
+    },
 
     // --- ENDGAME & FALLS ---
     triggerEndGame: function() {

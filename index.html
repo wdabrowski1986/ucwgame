@@ -65,6 +65,15 @@
         </div>
     </div>
 
+    <!-- Mini punishment overlay for quick between-move punishments -->
+    <div id="mini-punish" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
+        <div style="max-width:90%;background:rgba(0,0,0,0.85);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+            <h2 id="mini-title" style="color:var(--gold);margin-bottom:8px;">MINI PUNISHMENT</h2>
+            <p id="mini-desc" style="color:#ddd;margin-bottom:12px;"></p>
+            <div id="mini-timer" style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;"><div id="mini-timer-fill" style="height:100%;width:100%;background:var(--danger-red);transition:width linear;"></div></div>
+        </div>
+    </div>
+
     <!-- Main content container (constrains width on large screens) -->
     <div class="page-container">
     <div id="hud">
