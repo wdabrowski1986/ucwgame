@@ -3,7 +3,14 @@
 const App = {
     state: {
         attacker: 'wayne',
-        p1Health: 100, p2Health: 100,
+        // Increase base health to make matches longer; damage and heals scale relative to maxHealth
+        maxHealth: 150,
+        p1Health: 150, p2Health: 150,
+        // Scalable damage/heal percentages
+        baseDamagePercent: 0.12,   // 12% of maxHealth per successful move
+        pinHealPercent: 0.08,      // 8% of maxHealth for successful kickout
+        sensualHealPercent: 0.07,  // 7% heal during sensual rewards
+        
         p1Layer: 0, p2Layer: 0,
         p1Falls: 0, p2Falls: 0, 
         stipulation: 'STANDARD',
@@ -48,14 +55,15 @@ const App = {
         document.getElementById('stipulation-banner').innerText = config.name;
         
         // 2. RESET STATE FOR NEW MATCH
-        this.state.p1Health = 100; this.state.p2Health = 100;
+        this.state.p1Health = this.state.maxHealth; this.state.p2Health = this.state.maxHealth;
         this.state.p1Falls = 0; this.state.p2Falls = 0;
         this.state.p1Layer = 0; this.state.p2Layer = 0;
         this.state.roundCount = 0;
         
-        // Sudden Death Rule
+        // Sudden Death Rule (50% of max health)
         if (this.state.stipulation === 'SUDDEN_DEATH') {
-            this.state.p1Health = 50; this.state.p2Health = 50;
+            const half = Math.round(this.state.maxHealth / 2);
+            this.state.p1Health = half; this.state.p2Health = half;
         }
 
         // Coin Toss
@@ -86,9 +94,9 @@ const App = {
         const att = this.state.attacker;
         const oppHealth = att === 'wayne' ? this.state.p2Health : this.state.p1Health;
         
-        // Deck Selection (Finisher vs General)
+        // Deck Selection (Finisher vs General) - use percentage threshold based on maxHealth
         let deck;
-        if (oppHealth < 25) {
+        if (oppHealth < (0.25 * this.state.maxHealth)) {
             deck = DATA[att].finishers;
             this.state.isFinisher = true;
             document.body.style.background = "#200"; // Red background for danger
@@ -192,7 +200,8 @@ const App = {
             }
         } else {
             // Normal Move Logic
-            const dmg = 15;
+            // Damage scales with configured maxHealth (use baseDamagePercent)
+            const dmg = Math.round(this.state.baseDamagePercent * this.state.maxHealth);
             let target = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
             
             if (target === 'cindy') this.state.p2Health -= dmg;
@@ -261,10 +270,10 @@ const App = {
         let layer = player === 'wayne' ? this.state.p1Layer : this.state.p2Layer;
         let shouldBeLayer = 0;
 
-        // Thresholds: 75% -> 50% -> 25%
-        if (health < 25) shouldBeLayer = 3;
-        else if (health < 50) shouldBeLayer = 2;
-        else if (health < 75) shouldBeLayer = 1;
+        // Thresholds relative to maxHealth: 75% -> 50% -> 25%
+        if (health < (0.25 * this.state.maxHealth)) shouldBeLayer = 3;
+        else if (health < (0.50 * this.state.maxHealth)) shouldBeLayer = 2;
+        else if (health < (0.75 * this.state.maxHealth)) shouldBeLayer = 1;
 
         if (shouldBeLayer > layer) {
             const item = WARDROBE[player][layer]; 
@@ -343,9 +352,10 @@ const App = {
         clearInterval(this.state.pinTimer);
         document.getElementById('kickout-overlay').style.display = 'none';
         
-        // Adrenaline Heal
-        if (this.state.attacker === 'wayne') this.state.p2Health += 15;
-        else this.state.p1Health += 15;
+        // Adrenaline Heal (scale with maxHealth)
+        const heal = Math.round(this.state.pinHealPercent * this.state.maxHealth);
+        if (this.state.attacker === 'wayne') this.state.p2Health += heal;
+        else this.state.p1Health += heal;
         
         this.updateHUD();
         this.announce("ESCAPED!", 'high');
@@ -374,9 +384,10 @@ const App = {
         document.getElementById('sub-text').innerText = reward.desc;
         document.body.style.background = "#1a0b2e"; // Purple tint
         
-        // Heal
-        this.state.p1Health = Math.min(100, this.state.p1Health + 10);
-        this.state.p2Health = Math.min(100, this.state.p2Health + 10);
+        // Heal (scale with maxHealth)
+        const healAmt = Math.round(this.state.sensualHealPercent * this.state.maxHealth);
+        this.state.p1Health = Math.min(this.state.maxHealth, this.state.p1Health + healAmt);
+        this.state.p2Health = Math.min(this.state.maxHealth, this.state.p2Health + healAmt);
         this.updateHUD();
         
         // Reward Timer
@@ -510,14 +521,16 @@ const App = {
         document.getElementById('champ-name').innerText = champ;
         document.getElementById('champ-stats').innerText = stats;
 
-        // Health Bars
+        // Health Bars (width is percentage of maxHealth)
         const p1 = document.getElementById('p1-bar'); const p2 = document.getElementById('p2-bar');
-        p1.style.width = Math.max(0, this.state.p1Health) + '%';
-        p2.style.width = Math.max(0, this.state.p2Health) + '%';
+        const p1Pct = Math.max(0, Math.round((this.state.p1Health / this.state.maxHealth) * 100));
+        const p2Pct = Math.max(0, Math.round((this.state.p2Health / this.state.maxHealth) * 100));
+        p1.style.width = p1Pct + '%';
+        p2.style.width = p2Pct + '%';
         
-        // Critical Animation
-        if (this.state.p1Health < 25) p1.parentElement.classList.add('critical'); else p1.parentElement.classList.remove('critical');
-        if (this.state.p2Health < 25) p2.parentElement.classList.add('critical'); else p2.parentElement.classList.remove('critical');
+        // Critical Animation (use percentage threshold)
+        if (this.state.p1Health < (0.25 * this.state.maxHealth)) p1.parentElement.classList.add('critical'); else p1.parentElement.classList.remove('critical');
+        if (this.state.p2Health < (0.25 * this.state.maxHealth)) p2.parentElement.classList.add('critical'); else p2.parentElement.classList.remove('critical');
     },
 
     updateClothingUI: function() {
