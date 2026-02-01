@@ -28,6 +28,8 @@ const App = {
         
         // Hide start screen immediately to avoid blocking on mobile when fullscreen/wakeLock prompt appears
         document.getElementById('start-screen').style.display = 'none';
+        // Mark that a match is now running so responsive UI can show/hide controls appropriately
+        if (typeof document !== 'undefined' && document.body) document.body.classList.add('in-match');
         
         // Samsung/Android Optimizations (don't await; run async and ignore errors so init continues)
         if (document.documentElement.requestFullscreen) {
@@ -440,6 +442,8 @@ const App = {
         
         this.announce(`WINNER: ${winner.toUpperCase()}!`, 'win');
         setTimeout(() => {
+            // End of match — remove match state so controls hide and start screen/punishment display cleanly
+            if (typeof document !== 'undefined' && document.body) document.body.classList.remove('in-match');
             document.getElementById('punishment-screen').style.display = 'flex';
             document.getElementById('punish-msg').innerText = `${loser} lost. Select Punishment.`;
         }, 4000);
