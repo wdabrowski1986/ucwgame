@@ -4,7 +4,7 @@ const DATA = {
         { name: "Domination Mount", desc: "Straddle the chest. Pin the wrists. Make them beg for their next breath.", img: "images/full-mount-control.png" },
         { name: "Possessive Body Lock", desc: "Wrap legs tight around waist. Squeeze until heart rates synchronize.", img: "images/body-lock.png" },
         { name: "The Bulldozer", desc: "Drive shoulder into chest, pin them flat. Total impact.", img: "images/the-bulldozer.png" },
-        { name: "69 Lockdown", desc: "Pin their arms with thighs. Give them a view they can't touch. Mutual torture.", img: "images/69-pin.png" },
+        { name: "69 Lockdown", desc: "Pin their arms with thighs. Give them a view they can't touch. Mutual torture.", img: "images/69-Pin.png" }, // NOTE: filename case must match the images folder exactly (GitHub Pages is case-sensitive)
         { name: "Grapevine Exposure", desc: "Weave legs inside theirs. Spread them wide open. They are yours to look at.", img: "images/grapevine-hold.png" },
         { name: "The Display", desc: "Sit on chest facing feet. Pin the legs. You are the only thing they can see.", img: "images/the-display.png" }
     ],
