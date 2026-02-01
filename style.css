@@ -24,6 +24,16 @@ body {
     user-select: none; -webkit-user-select: none;
 }
 
+/* Subtle persistent ring background visible behind UI elements */
+body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url('images/ring-bg.jpg');
+    background-size: cover; background-position: center; background-repeat: no-repeat;
+    opacity: 0.06; /* tweak this value to taste - higher = more visible */
+    filter: saturate(0.9) brightness(0.85);
+} 
+
 /* Central page container */
 .page-container { width: min(1100px, 96%); max-width: 1100px; margin: 0 auto; box-sizing: border-box; }
 
@@ -48,7 +58,8 @@ body {
 #start-screen::before {
     content: '';
     position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(74,0,24,0.6));
+    /* Lighter overlay so the ring background can be seen through the UI */
+    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(74,0,24,0.32));
     pointer-events: none;
 }
 
@@ -75,14 +86,15 @@ body {
 
 .belt-display {
     border: 1px solid var(--glass-border); 
-    background: rgba(0, 0, 0, 0.6);
+    /* lighter so ring shows through */
+    background: rgba(0, 0, 0, 0.35);
     padding: 30px; 
     border-radius: 15px; 
     margin-bottom: 50px; 
     width: 85%;
     backdrop-filter: blur(5px);
-    box-shadow: 0 0 30px rgba(255, 0, 80, 0.1);
-}
+    box-shadow: 0 0 18px rgba(255, 0, 80, 0.06);
+} 
 
 .belt-label { 
     color: #888; font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; 
@@ -104,13 +116,13 @@ body {
     font-family: 'Montserrat', sans-serif; 
     padding: 25px 60px; 
     font-size: 1.4rem;
-    background: linear-gradient(135deg, var(--danger-red), #990033);
+    background: linear-gradient(135deg, rgba(255,20,80,0.98), #990033);
     color: white; 
     border: none; 
     border-radius: 50px; 
     font-weight: 800; 
     letter-spacing: 3px;
-    box-shadow: 0 0 30px rgba(255, 0, 80, 0.4);
+    box-shadow: 0 0 18px rgba(255, 0, 80, 0.18);
     margin-bottom: 30px; 
     cursor: pointer; 
     text-transform: uppercase;
