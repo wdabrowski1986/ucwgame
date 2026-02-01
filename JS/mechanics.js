@@ -310,12 +310,24 @@ const App = {
 
 
     triggerStripEvent: function(player, item) {
-        // Keep controls visible; show overlay above arena but beneath sticky controls on mobile
+        // Show overlay and mark overlay-open to hide the controls
         const ol = document.getElementById('strip-screen');
         ol.style.display = 'flex';
+        document.body.classList.add('overlay-open');
         document.getElementById('strip-player-name').innerText = player.toUpperCase();
         document.getElementById('strip-item-name').innerText = item;
         this.announce(`WARDROBE MALFUNCTION! ${player}, remove your ${item}!`, 'high');
+    },
+
+    confirmStrip: function() {
+        document.getElementById('strip-screen').style.display = 'none';
+        // Remove overlay marker so controls can reappear
+        document.body.classList.remove('overlay-open');
+        this.announce("Resume Match!", 'normal');
+        
+        // Forced Swap after Strip Event
+        this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+        this.nextRound();
     },
 
     confirmStrip: function() {
@@ -329,9 +341,10 @@ const App = {
 
     // --- PINFALL & EVENTS ---
     startPinfall: function() {
-        // Keep controls visible; show kickout overlay above arena but beneath sticky controls on mobile
+        // Show kickout overlay and hide controls
         const overlay = document.getElementById('kickout-overlay');
         overlay.style.display = 'flex';
+        document.body.classList.add('overlay-open');
         
         // UI Text based on Match Type
         if (this.state.stipulation === 'SUBMISSION') {
@@ -361,8 +374,8 @@ const App = {
                 this.updateHUD();
                 
                 setTimeout(() => {
-                    document.getElementById('kickout-overlay').style.display = 'none';
-                    this.triggerEndGame();
+                    document.getElementById('kickout-overlay').style.display = 'none';                    // remove overlay marker; punishment screen will add it again if needed
+                    document.body.classList.remove('overlay-open');                    this.triggerEndGame();
                 }, 1000);
             }
         }, 1200); // 1.2 second count cadence
@@ -371,8 +384,8 @@ const App = {
     attemptKickout: function() {
         // Successful Escape
         clearInterval(this.state.pinTimer);
-        document.getElementById('kickout-overlay').style.display = 'none';
-        
+        document.getElementById('kickout-overlay').style.display = 'none';        // Remove overlay-open so controls return
+        document.body.classList.remove('overlay-open');        
         // Adrenaline Heal (scale with maxHealth)
         const heal = Math.round(this.state.pinHealPercent * this.state.maxHealth);
         if (this.state.attacker === 'wayne') this.state.p2Health += heal;
@@ -435,11 +448,14 @@ const App = {
         document.body.style.background = "#2c0e36"; 
         this.announce(`SECRET: ${secret.name}`, 'high');
         document.getElementById('sub-text').innerText = secret.desc;
+        // Hide controls while secret displays
+        document.body.classList.add('overlay-open');
         
         if (secret.name === "ROLE SWAP") this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
         
-        setTimeout(() => { this.announce("Resume Match", 'normal'); this.nextRound(); }, 5000); 
+        setTimeout(() => { this.announce("Resume Match", 'normal'); document.body.classList.remove('overlay-open'); this.nextRound(); }, 5000); 
     },
+
 
     // --- ENDGAME & FALLS ---
     triggerEndGame: function() {
@@ -472,8 +488,9 @@ const App = {
         
         this.announce(`WINNER: ${winner.toUpperCase()}!`, 'win');
         setTimeout(() => {
-            // End of match — remove match state so controls hide and start screen/punishment display cleanly
+            // End of match — remove match state and show punishment overlay; hide controls
             if (typeof document !== 'undefined' && document.body) document.body.classList.remove('in-match');
+            document.body.classList.add('overlay-open');
             document.getElementById('punishment-screen').style.display = 'flex';
             document.getElementById('punish-msg').innerText = `${loser} lost. Select Punishment.`;
         }, 4000);

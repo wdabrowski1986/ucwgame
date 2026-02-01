@@ -374,6 +374,11 @@ body {
 
     /* Ensure overlays don't cover the bottom sticky controls on mobile */
     .overlay { z-index: 80; padding-bottom: calc(88px + env(safe-area-inset-bottom,0)); }
+
+    /* When any full-screen overlay is open, hide the control bar so it doesn't show on top */
+    body.overlay-open #controls-area { display: none !important; }
+    /* Keep standard start-screen behavior when overlay is not open but match hasn't started */
+    body.in-match.overlay-open #controls-area { display: none !important; }
     .btn-game { min-height: 56px; font-size: 1.05rem; }
     #btn-success { width: 100%; }
     #btn-reversal, #btn-tapout { width: 100%; }
