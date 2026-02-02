@@ -34,8 +34,90 @@ const App = {
         roundCount: 0,
         isSetupPhase: false,
         // Match intensity preference: SOFT, NORMAL, ROUGH
-        intensity: 'NORMAL'
+        intensity: 'NORMAL',
+        tapCount: 0,
+        skipCount: 0
     },
+
+    // --- ROUND & TAP HELPERS ---
+    // Return action time seconds based on intensity mapping
+    actionTimeForCurrentIntensity: function() {
+        if (this.state.isFinisher) return 15;
+        const i = this.state.intensity || 'NORMAL';
+        if (i === 'SOFT') return 45; // easy
+        if (i === 'ROUGH') return 90; // intense
+        return 60; // NORMAL
+    },
+
+    addTap: function() {
+        if (this.state.isSetupPhase) return; // cannot tap during setup
+        this.state.tapCount = (this.state.tapCount || 0) + 1;
+        const el = document.getElementById('tap-count'); if (el) el.innerText = this.state.tapCount;
+        this.vibrate([40], true);
+    },
+
+    openRoundSummary: function() {
+        // Stop timers and show summary
+        try { clearTimeout(this.state.timer); } catch(e) {}
+        try { this.stopCountdown(); } catch(e) {}
+        document.getElementById('round-summary-taps').innerText = this.state.tapCount || 0;
+        document.getElementById('round-summary').style.display = 'flex';
+        document.body.classList.add('overlay-open');
+    },
+
+    confirmRoundResult: function(action) {
+        // action: 'punish'|'escaped'|'survived'|'quit'
+        document.getElementById('round-summary').style.display = 'none';
+        document.body.classList.remove('overlay-open');
+        if (action === 'escaped') {
+            this.announce('Opponent escaped!', 'normal');
+            // swap attacker
+            this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+            this.resetCombo();
+            setTimeout(() => this.nextRound(), 1200);
+            return;
+        }
+        if (action === 'survived') {
+            this.announce('Round ended — survived!', 'normal');
+            this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+            this.resetCombo();
+            setTimeout(() => this.nextRound(), 1200);
+            return;
+        }
+        if (action === 'quit') {
+            // immediate big punishment
+            this.announce('Mercy granted — big punishment incoming!', 'high');
+            this.applyPunishmentBySeverity('BIG');
+            return;
+        }
+        // 'punish' path: determine severity based on tapCount
+        const taps = this.state.tapCount || 0;
+        let sev = 'MINI';
+        if (taps >= 8) sev = 'BIG';
+        else if (taps >= 3) sev = 'MEDIUM';
+        this.announce(`Applying ${sev} punishment based on ${taps} submissions.`, 'high');
+        this.applyPunishmentBySeverity(sev);
+    },
+
+    quitRound: function() {
+        // Immediate quit triggers big punishment path
+        this.announce('I QUIT ROUND — immediate mercy.', 'high');
+        // stop timers
+        try { clearTimeout(this.state.timer); } catch(e) {}
+        try { this.stopCountdown(); } catch(e) {}
+        this.state.tapCount = 999; // sentinel for quit
+        this.confirmRoundResult('quit');
+    },
+
+    applyPunishmentBySeverity: function(sev) {
+        // Map severity to punishment categories (fallback to any allowed category)
+        const order = (sev === 'BIG') ? ['domination','erotic','sensual','playful'] : (sev === 'MEDIUM') ? ['sensual','domination','erotic','playful'] : ['playful','sensual','domination','erotic'];
+        let chosen = null;
+        for (const c of order) { if (this.isCategoryAllowed(c)) { chosen = c; break; } }
+        if (!chosen) { this.announce('No permitted punishment categories for current intensity.', 'normal'); setTimeout(() => { this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne'; this.nextRound(); }, 1200); return; }
+        // Spin punishment of chosen category
+        setTimeout(() => { this.spinPunishment(chosen); }, 700);
+    }
 
     
     synth: window.speechSynthesis,

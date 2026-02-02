@@ -439,8 +439,12 @@ body {
     body.in-match.overlay-open #controls-area { display: none !important; }
     .btn-game { min-height: 56px; font-size: 1.05rem; }
     #btn-success { width: 100%; }
-    #btn-reversal, #btn-tapout, #btn-skip { width: 100%; }
+    #btn-reversal, #btn-tapout, #btn-skip, #btn-addtap, #btn-endround, #btn-quit-round { width: 100%; }
 #btn-skip { background: linear-gradient(135deg,#ffd27a,#ffc066); color:#111; border-color: rgba(0,0,0,0.06); }
+#btn-addtap { background: linear-gradient(135deg,#ff6b6b,#ff3b30); color:#fff; }
+#btn-endround { background: linear-gradient(135deg,#6dd3ff,#3bb0ff); color:#042; }
+#btn-quit-round { background: linear-gradient(135deg,#9b59b6,#7d3c98); color:#fff; }
+#round-summary { z-index:900; }
 
     /* Hide thin timer at bottom to reduce clutter on small screens */
     #timer-strip { display: none; }

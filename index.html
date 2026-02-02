@@ -150,10 +150,29 @@
     <div id="controls-area">
         <button id="btn-success" class="btn-game" onclick="App.handleSuccess()">SUBMITTED</button>
         <button id="btn-reversal" class="btn-game" onclick="App.handleReversal()">REVERSED<br>SURVIVED</button>
+        <button id="btn-addtap" class="btn-game btn-tap" onclick="App.addTap()">SUBMISSION +1<br><span id="tap-count" style="font-size:0.8rem;opacity:0.9;">0</span></button>
         <button id="btn-skip" class="btn-game btn-skip" onclick="App.skipMove()">SKIP MOVE</button>
+        <button id="btn-endround" class="btn-game btn-end" onclick="App.openRoundSummary()">END ROUND</button>
+        <button id="btn-quit-round" class="btn-game btn-quit" onclick="App.quitRound()">I QUIT ROUND (MERCY)</button>
         <button id="btn-tapout" class="btn-game" onclick="App.handleTapOut()">I TAP OUT (GIVE UP ROUND)</button>
         <button id="btn-safeword" class="btn-game btn-safety" onclick="App.togglePause()">SAFETY</button>
     </div>
+
+    <!-- Round summary modal shown at end of action (confirm results & apply punishment) -->
+    <div id="round-summary" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
+        <div style="max-width:92%;background:rgba(0,0,0,0.95);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center;">
+            <h2 id="round-summary-title">Round Result</h2>
+            <p id="round-summary-body">Submissions: <strong id="round-summary-taps">0</strong></p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
+                <button class="btn-menu" onclick="App.confirmRoundResult('punish')">Apply Punishment</button>
+                <button class="btn-reset" onclick="App.confirmRoundResult('escaped')">Mark Escaped</button>
+                <button class="btn-safety" onclick="App.confirmRoundResult('survived')">Mark Survived</button>
+                <button class="btn-quit" onclick="App.confirmRoundResult('quit')">I Quit (Big Punishment)</button>
+                <button class="btn-reset" onclick="document.getElementById('round-summary').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     </div> <!-- .page-container -->
 
 
