@@ -36,7 +36,10 @@ const App = {
         // Match intensity preference: SOFT, NORMAL, ROUGH
         intensity: 'NORMAL',
         tapCount: 0,
-        skipCount: 0
+        skipCount: 0,
+        // Configurable per-round caps and thresholds
+        maxSkipsPerRound: 3,
+        tapThresholds: { medium: 3, big: 8 }
     },
 
     // --- ROUND & TAP HELPERS ---
@@ -47,6 +50,17 @@ const App = {
         if (i === 'SOFT') return 45; // easy
         if (i === 'ROUGH') return 90; // intense
         return 60; // NORMAL
+    },
+
+    // Update skip UI (badge text and disabled state)
+    updateSkipUI: function() {
+        const btn = document.getElementById('btn-skip');
+        if (!btn) return;
+        const max = this.state.maxSkipsPerRound || 3;
+        const used = this.state.skipCount || 0;
+        const remaining = Math.max(0, max - used);
+        btn.innerText = `SKIP MOVE (${remaining}/${max})`;
+        btn.disabled = remaining <= 0;
     },
 
     addTap: function() {
@@ -213,7 +227,9 @@ const App = {
             else if (i === 'ROUGH') desc = 'Rough: stronger moves, lower heals, higher strip/punish chances.';
             const dmgPct = Math.round(this.state.baseDamagePercent * 100);
             const stripPct = Math.round((this.state.stripChance && this.state.stripChance[1]) ? this.state.stripChance[1] * 100 : 0);
-            hint.innerText = `Intensity: ${i} — ${desc} (Damage ~${dmgPct}%, Strip ~${stripPct}% for layer 1)`;
+            const tMed = this.state.tapThresholds ? this.state.tapThresholds.medium : 3;
+            const tBig = this.state.tapThresholds ? this.state.tapThresholds.big : 8;
+            hint.innerText = `Intensity: ${i} — ${desc} (Damage ~${dmgPct}%, Strip ~${stripPct}% for layer 1). Tap thresholds: MINI 0-${tMed-1}, MEDIUM ${tMed}-${tBig-1}, BIG ${tBig}+.`;
         }
     },
 
@@ -338,8 +354,10 @@ const App = {
     nextRound: function() {
         this.stopTimer();
         this.state.roundCount++;
-        // Reset per-round skip counter (max 3 skips per round)
+        // Reset per-round skip counter (max skips configurable)
         this.state.skipCount = 0;
+        // Update skip UI
+        try { this.updateSkipUI(); } catch(e) {}
 
         // Rule Checks
         if (this.state.roundCount === 12) this.announce("SUDDEN DEATH! Healing Disabled!", 'high');
@@ -565,8 +583,8 @@ const App = {
     },
 
     skipMove: function() {
-        // Allow up to 3 skips per round to avoid abuse
-        const maxSkips = 3;
+        // Allow up to configured skips per round to avoid abuse
+        const maxSkips = this.state.maxSkipsPerRound || 3;
         this.state.skipCount = this.state.skipCount || 0;
         if (this.state.skipCount >= maxSkips) { this.announce('No skips remaining this round.', 'normal'); return; }
 
@@ -574,6 +592,7 @@ const App = {
 
         this.state.skipCount++;
         this.announce(`Move skipped (${this.state.skipCount}/${maxSkips})`, 'normal');
+        try { this.updateSkipUI(); } catch(e) {}
 
         // Clear current timers and UI timers
         try { clearTimeout(this.state.timer); } catch(e) {}
@@ -1145,6 +1164,7 @@ const App = {
         document.getElementById('btn-success').disabled = false;
         // Ensure skip is disabled/reset by default until a move is active
         try { document.getElementById('btn-skip').disabled = true; } catch(e) {}
+        try { this.updateSkipUI(); } catch(e) {}
         document.getElementById('kickout-overlay').style.display = 'none';
         document.getElementById('strip-screen').style.display = 'none';
         
