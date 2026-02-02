@@ -33,8 +33,8 @@ const App = {
         wins: { wayne: 0, cindy: 0 },
         roundCount: 0,
         isSetupPhase: false,
-        // Consent settings (persisted)
-        consent: { accepted: false, categories: { sensual: true, domination: true, erotic: true, playful: true } }
+        // Match intensity preference: SOFT, NORMAL, ROUGH
+        intensity: 'NORMAL'
     },
 
     
@@ -64,37 +64,24 @@ const App = {
         const silentChk = document.getElementById('silent-mode');
         if (silentChk && typeof cfg.silentMode !== 'undefined') { silentChk.checked = !!cfg.silentMode; this.state.silentMode = !!cfg.silentMode; document.body.classList.toggle('quiet-mode', !!cfg.silentMode); }
 
-        // Load consent settings if present
-        if (cfg.consentAccepted || cfg.consentCategories) {
-            this.state.consent.accepted = !!cfg.consentAccepted;
-            const cats = cfg.consentCategories || {};
-            this.state.consent.categories = Object.assign({}, this.state.consent.categories, cats);
+        // Load intensity preference if present
+        if (cfg.intensity) {
+            this.state.intensity = cfg.intensity;
+            const sel = document.getElementById('match-intensity'); if (sel) sel.value = this.state.intensity;
+            // Apply intensity mapping so loaded preferences take effect immediately
+            try { this.applyIntensitySettings(); } catch(e) { console.warn('applyIntensitySettings failed', e); }
         }
-
-        // If consent modal exists, populate its checkboxes
-        const cSensual = document.getElementById('consent-cat-sensual');
-        const cDom = document.getElementById('consent-cat-domination');
-        const cErotic = document.getElementById('consent-cat-erotic');
-        const cPlayful = document.getElementById('consent-cat-playful');
-        const cAgree = document.getElementById('consent-agree');
-        try {
-            if (cSensual) cSensual.checked = !!this.state.consent.categories.sensual;
-            if (cDom) cDom.checked = !!this.state.consent.categories.domination;
-            if (cErotic) cErotic.checked = !!this.state.consent.categories.erotic;
-            if (cPlayful) cPlayful.checked = !!this.state.consent.categories.playful;
-            if (cAgree) cAgree.checked = !!this.state.consent.accepted;
-        } catch(e) {}
     },
 
     saveSettings: function() {
         try {
             const breakInput = document.getElementById('break-length');
             const silentChk = document.getElementById('silent-mode');
+            const intensitySel = document.getElementById('match-intensity');
             const cfg = {
                 breakLength: breakInput ? parseInt(breakInput.value, 10) : this.state.setupDelaySeconds,
                 silentMode: silentChk ? !!silentChk.checked : !!this.state.silentMode,
-                consentAccepted: !!(this.state.consent && this.state.consent.accepted),
-                consentCategories: (this.state.consent && this.state.consent.categories) ? this.state.consent.categories : undefined
+                intensity: intensitySel ? intensitySel.value : this.state.intensity
             };
             localStorage.setItem('ubc_settings', JSON.stringify(cfg));
         } catch(e) { console.warn('saveSettings failed', e); }
@@ -102,51 +89,48 @@ const App = {
 
 
 
-    // --- CONSENT & SAFEWORD (PAUSE) ---
-    showConsentModal: function() {
-        const el = document.getElementById('consent-modal'); if (!el) return;
-        // Populate with existing state
-        try {
-            const cSensual = document.getElementById('consent-cat-sensual');
-            const cDom = document.getElementById('consent-cat-domination');
-            const cErotic = document.getElementById('consent-cat-erotic');
-            const cPlayful = document.getElementById('consent-cat-playful');
-            if (cSensual) cSensual.checked = !!this.state.consent.categories.sensual;
-            if (cDom) cDom.checked = !!this.state.consent.categories.domination;
-            if (cErotic) cErotic.checked = !!this.state.consent.categories.erotic;
-            if (cPlayful) cPlayful.checked = !!this.state.consent.categories.playful;
-            const agree = document.getElementById('consent-agree'); if (agree) agree.checked = !!this.state.consent.accepted;
-        } catch(e) {}
 
-        el.style.display = 'flex'; document.body.classList.add('overlay-open');
-    },
 
-    acceptConsent: function() {
-        const agree = document.getElementById('consent-agree');
-        if (!agree || !agree.checked) {
-            const err = document.getElementById('consent-error'); if (err) { err.style.display = 'block'; err.innerText = 'Please confirm consent from both players to continue.'; }
-            return;
+    applyIntensitySettings: function() {
+        const i = this.state.intensity || 'NORMAL';
+        // Map intensity to gameplay parameters
+        if (i === 'SOFT') {
+            this.state.baseDamagePercent = 0.08;
+            this.state.pinHealPercent = 0.06;
+            this.state.sensualHealPercent = 0.12;
+            this.state.comboBonusPercent = 0.06;
+            this.state.comboMaxMultiplier = 1.5;
+            this.state.stripChance = {1:0.25,2:0.45,3:0.65};
+            this.state.minPunishChance = 0.12;
+            this.state.minPunishDuration = 5;
+        } else if (i === 'ROUGH') {
+            this.state.baseDamagePercent = 0.18;
+            this.state.pinHealPercent = 0.06;
+            this.state.sensualHealPercent = 0.03;
+            this.state.comboBonusPercent = 0.12;
+            this.state.comboMaxMultiplier = 2.5;
+            this.state.stripChance = {1:0.6,2:0.85,3:0.98};
+            this.state.minPunishChance = 0.45;
+            this.state.minPunishDuration = 12;
+        } else {
+            // NORMAL
+            this.state.baseDamagePercent = 0.12;
+            this.state.pinHealPercent = 0.08;
+            this.state.sensualHealPercent = 0.07;
+            this.state.comboBonusPercent = 0.10;
+            this.state.comboMaxMultiplier = 2.0;
+            this.state.stripChance = {1:0.45,2:0.65,3:0.9};
+            this.state.minPunishChance = 0.28;
+            this.state.minPunishDuration = 8;
         }
-        // Read categories
-        const cSensual = document.getElementById('consent-cat-sensual');
-        const cDom = document.getElementById('consent-cat-domination');
-        const cErotic = document.getElementById('consent-cat-erotic');
-        const cPlayful = document.getElementById('consent-cat-playful');
-        this.state.consent.categories.sensual = !!(cSensual && cSensual.checked);
-        this.state.consent.categories.domination = !!(cDom && cDom.checked);
-        this.state.consent.categories.erotic = !!(cErotic && cErotic.checked);
-        this.state.consent.categories.playful = !!(cPlayful && cPlayful.checked);
-        this.state.consent.accepted = true;
-        this.saveSettings();
-
-        const el = document.getElementById('consent-modal'); if (el) el.style.display = 'none'; document.body.classList.remove('overlay-open');
-        // Continue init/start flow now that consent is accepted
-        try { this.init(); } catch(e) {}
+        // Update a small UI hint if present
+        const hint = document.getElementById('intensity-hint'); if (hint) hint.innerText = `Intensity: ${i}`;
     },
 
     isCategoryAllowed: function(cat) {
-        if (!this.state || !this.state.consent || !this.state.consent.categories) return true;
-        return !!this.state.consent.categories[cat];
+        const i = this.state.intensity || 'NORMAL';
+        if (i === 'SOFT') return ['sensual','playful'].includes(cat);
+        return true;
     },
 
     _paused: false,
@@ -191,12 +175,12 @@ const App = {
         if (silentChk) { silentChk.addEventListener('change', (e) => { this.state.silentMode = !!e.target.checked; document.body.classList.toggle('quiet-mode', !!e.target.checked); this.saveSettings(); }); }
         // Persist loaded or initial settings
         this.saveSettings();
+        // Ensure intensity mapping applied at start
+        try { this.applyIntensitySettings(); } catch(e) { console.warn('applyIntensitySettings failed', e); }
 
-        // If consent hasn't been accepted, show consent modal and defer game start
-        if (!this.state.consent || !this.state.consent.accepted) {
-            this.showConsentModal();
-            return;
-        }
+        // Wire intensity selector changes to persist
+        const intensitySel = document.getElementById('match-intensity');
+        if (intensitySel) { intensitySel.addEventListener('change', (e) => { this.state.intensity = e.target.value; this.saveSettings(); try { this.applyIntensitySettings(); } catch(e){ console.warn('applyIntensitySettings failed', e); } }); }
 
         // Wire long-press resume button on the safeword overlay to avoid accidental resume
         const resumeBtn = document.getElementById('btn-resume');
@@ -695,9 +679,9 @@ const App = {
     },
 
     triggerSensualReward: function() {
-        // Respect consent: skip sensual rewards if not allowed
+        // Respect intensity rules: skip sensual rewards if not allowed
         if (!this.isCategoryAllowed('sensual')) {
-            this.announce('Sensual reward skipped by consent.', 'normal');
+            this.announce('Sensual reward unavailable at current intensity.', 'normal');
             this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
             setTimeout(() => this.nextRound(), 1200);
             return;
@@ -761,9 +745,9 @@ const App = {
 
     // --- MINI PUNISHMENT (quick, between-move penalties) ---
     triggerMiniPunishment: function() {
-        // Respect consent: if playful category not allowed, skip
+        // Respect intensity rules: if playful category not allowed, skip
         if (!this.isCategoryAllowed('playful')) {
-            this.announce('Mini punishment skipped by consent.', 'normal');
+            this.announce('Mini punishment unavailable at current intensity.', 'normal');
             setTimeout(() => { this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne'; this.resetCombo(); this.nextRound(); }, 1400);
             return;
         }
@@ -857,7 +841,7 @@ const App = {
         document.getElementById('punish-result').style.display = 'none';
         document.getElementById('punishment-screen').style.display = 'flex';
 
-        // Show only categories allowed by consent
+        // Show only categories allowed by match intensity
         const options = document.querySelectorAll('#punish-options button[data-cat]');
         let anyVisible = false;
         options.forEach(btn => {
@@ -865,7 +849,7 @@ const App = {
             if (!this.isCategoryAllowed(cat)) { btn.style.display = 'none'; } else { btn.style.display = 'block'; anyVisible = true; }
         });
         if (!anyVisible) {
-            document.getElementById('punish-msg').innerText = `No permitted punishment categories. Please update consent.`;
+            document.getElementById('punish-msg').innerText = `No permitted punishment categories for current intensity.`;
             document.getElementById('punish-options').style.display = 'none';
         } else {
             document.getElementById('punish-msg').innerText = `Select Punishment.`;
@@ -877,12 +861,12 @@ const App = {
     },
 
     spinPunishment: function(cat) {
-        // Validate against consent
+        // Validate against match intensity
         if (!this.isCategoryAllowed(cat)) {
             document.getElementById('punish-options').style.display = 'none';
             document.getElementById('punish-result').style.display = 'block';
             document.getElementById('punish-title').innerText = 'UNAVAILABLE';
-            document.getElementById('punish-desc').innerText = 'This punishment category is not permitted by current consent settings.';
+            document.getElementById('punish-desc').innerText = 'This punishment category is not permitted at the current match intensity.';
             return;
         }
 
