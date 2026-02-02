@@ -135,7 +135,7 @@ const App = {
         if (!chosen) { this.announce('No permitted punishment categories for current intensity.', 'normal'); setTimeout(() => { this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne'; this.nextRound(); }, 1200); return; }
         // Spin punishment of chosen category
         setTimeout(() => { this.spinPunishment(chosen); }, 700);
-    }
+    },
 
     
     synth: window.speechSynthesis,
