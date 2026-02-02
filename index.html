@@ -158,22 +158,30 @@
 
 
     <script>
-        // Script loader tracker: records onload/onerror for each script so we can debug mobile issues
-        window.__scriptLoadInfo = window.__scriptLoadInfo || [];
+        // Script loader tracker: records latest onload/onerror per script to debug mobile issues
+        window.__scriptLoadInfo = window.__scriptLoadInfo || {};
         function updateStartButton(){
             const startBtn = document.querySelector('#start-screen .btn-menu');
             if(!startBtn) return;
-            const errors = window.__scriptLoadInfo && window.__scriptLoadInfo.some(s => s.status === 'error');
-            // If there are errors reported, keep start disabled. Otherwise enable it.
-            startBtn.disabled = !!errors;
-            console.info('Start button enabled:', !errors);
+            // Required scripts for the app to function
+            const required = ['JS/moves.js','JS/secrets.js','JS/mechanics.js'];
+            let disabled = false;
+            for (const r of required) {
+                const status = (window.__scriptLoadInfo || {})[r];
+                // If a required script is missing or reported an error, disable start
+                if (!status || status === 'error') { disabled = true; break; }
+            }
+            startBtn.disabled = disabled;
+            console.info('Start button enabled:', !disabled);
         }
         function __recordScript(name, status){
             try{
-                window.__scriptLoadInfo.push({name:name, status:status, time:new Date().toISOString()});
+                // Keep latest status per script name
+                window.__scriptLoadInfo = window.__scriptLoadInfo || {};
+                window.__scriptLoadInfo[name] = status;
                 var pre = document.getElementById('error-pre');
                 if(pre){
-                    var lines = window.__scriptLoadInfo.map(s => s.time + ' ' + s.name + ': ' + s.status);
+                    var lines = Object.keys(window.__scriptLoadInfo).map(k => k + ': ' + window.__scriptLoadInfo[k]);
                     pre.textContent = 'Script load events:\n' + lines.join('\n') + '\n\n' + (pre.textContent || '');
                     var details = document.getElementById('error-log'); if(details) details.style.display = 'block';
                 }
