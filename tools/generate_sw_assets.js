@@ -17,8 +17,9 @@ function getImageFiles() {
 }
 
 function toAssetList(extra = []) {
-  const basics = ['/', '/index.html', '/style.css', '/JS/mechanics.js', '/JS/moves.js', '/JS/secrets.js', '/manifest.json'];
-  const images = getImageFiles().map(f => '/images/' + f.replace(/\\\\/g, '/'));
+  // Use relative paths so the service worker works correctly on repo subpaths (GitHub Pages)
+  const basics = ['./', 'index.html', 'style.css', 'JS/mechanics.js', 'JS/moves.js', 'JS/secrets.js', 'manifest.json'];
+  const images = getImageFiles().map(f => 'images/' + f.replace(/\\\\/g, '/'));
   const all = [...basics, ...extra, ...images];
   return all;
 }
