@@ -458,3 +458,11 @@ body::after {
     #main-image { max-height: 24vh; }
     #instruction-text { font-size: 1.2rem; }
 }
+
+/* Quiet Mode Tweaks: reduce motion and visual noise for discreet play */
+body.quiet-mode .btn-menu { animation: none !important; box-shadow: none !important; opacity: 0.95; }
+body.quiet-mode #main-image { animation: none !important; }
+body.quiet-mode .flash, body.quiet-mode .shake-screen { display: none !important; animation: none !important; transform: none !important; }
+body.quiet-mode .belt-display { background: rgba(0,0,0,0.28) !important; box-shadow: none !important; }
+body.quiet-mode #timer-fill { transition: width 0.5s ease !important; }
+body.quiet-mode * { transition-duration: 0.15s !important; }

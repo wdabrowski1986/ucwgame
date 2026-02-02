@@ -60,7 +60,7 @@ const App = {
             this.state.setupDelaySeconds = parseInt(cfg.breakLength, 10) || this.state.setupDelaySeconds;
         }
         const silentChk = document.getElementById('silent-mode');
-        if (silentChk && typeof cfg.silentMode !== 'undefined') { silentChk.checked = !!cfg.silentMode; this.state.silentMode = !!cfg.silentMode; }
+        if (silentChk && typeof cfg.silentMode !== 'undefined') { silentChk.checked = !!cfg.silentMode; this.state.silentMode = !!cfg.silentMode; document.body.classList.toggle('quiet-mode', !!cfg.silentMode); }
     },
 
     saveSettings: function() {
@@ -88,7 +88,7 @@ const App = {
             breakInput.addEventListener('input', (e) => { if (valEl) valEl.innerText = e.target.value + 's'; this.state.setupDelaySeconds = parseInt(e.target.value, 10) || this.state.setupDelaySeconds; this.saveSettings(); });
         }
         const silentChk = document.getElementById('silent-mode');
-        if (silentChk) { silentChk.addEventListener('change', (e) => { this.state.silentMode = !!e.target.checked; this.saveSettings(); }); }
+        if (silentChk) { silentChk.addEventListener('change', (e) => { this.state.silentMode = !!e.target.checked; document.body.classList.toggle('quiet-mode', !!e.target.checked); this.saveSettings(); }); }
         // Persist loaded or initial settings
         this.saveSettings();
         
@@ -275,6 +275,12 @@ const App = {
                 self.stopCountdown();
             } else {
                 el.innerText = remaining + 's';
+                // Vibrate quietly on the last three seconds for silent play
+                if (self.state.silentMode && 'vibrate' in navigator && remaining <= 3) {
+                    if (remaining === 3) self.vibrate(100);
+                    else if (remaining === 2) self.vibrate([100, 40, 100]);
+                    else if (remaining === 1) self.vibrate([200, 60, 200]);
+                }
             }
         }, 1000);
     },
@@ -291,7 +297,14 @@ const App = {
         if (this.state.combo < 1) this.state.combo = 1;
         this.updateComboUI();
         // Announce notable combo milestones
-        if (this.state.combo >= 2) this.announce(`COMBO x${this.state.combo}!`, 'normal');
+        if (this.state.combo >= 2) {
+            this.announce(`COMBO x${this.state.combo}!`, 'normal');
+            // subtle vibrate on combo milestones (stronger for bigger combos)
+            if (this.state.silentMode) {
+                const pattern = this.state.combo >= 4 ? [140, 40, 140] : [90, 20, 90];
+                this.vibrate(pattern);
+            }
+        }
     },
 
     resetCombo: function() {
@@ -673,6 +686,8 @@ const App = {
         localStorage.setItem('ubc_history', JSON.stringify(this.state.wins));
         
         this.announce(`WINNER: ${winner.toUpperCase()}!`, 'win');
+        // Provide haptic celebration for quiet play (force so players notice the win)
+        this.vibrate([300,100,300], true);
         setTimeout(() => {
             // End of match — remove match state and show winner screen first (controls hidden)
             if (typeof document !== 'undefined' && document.body) document.body.classList.remove('in-match');
@@ -729,12 +744,17 @@ const App = {
         } else {
             titleEl.innerText = text; subEl.innerText = "";
         }
+        // Gentle visual cue for all players
         document.body.classList.remove('flash'); void document.body.offsetWidth; document.body.classList.add('flash');
 
         if (this.state.silentMode) {
-            if (navigator.vibrate) {
-                if (priority === 'high') navigator.vibrate([100, 50, 100]); else navigator.vibrate(200);
-            }
+            // Vibrate patterns tuned for discrete feedback
+            const patterns = {
+                high: [150, 50, 150],
+                normal: [100],
+                win: [300, 100, 300]
+            };
+            this.vibrate(patterns[priority] || patterns.normal);
         } else {
             this.synth.cancel();
             // TTS cleanup
@@ -743,6 +763,14 @@ const App = {
             this.synth.speak(u);
         }
     },
+
+    // Small helper for vibration usage - respects silentMode unless `force` is true
+    vibrate: function(pattern, force = false) {
+        if (!('vibrate' in navigator)) return;
+        if (!force && !this.state.silentMode) return;
+        try { navigator.vibrate(pattern); } catch(e) { /* ignore */ }
+    },
+
 
     updateHUD: function() {
         // Win Stats
