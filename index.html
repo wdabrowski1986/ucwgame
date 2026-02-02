@@ -40,7 +40,37 @@
 
         <button class="btn-menu" onclick="App.init()">START MATCH</button>
         <button onclick="App.resetData()" class="btn-reset">Reset History</button>
+        <button class="btn-reset" onclick="App.showConsentModal()" style="margin-left:12px;">Manage Consent</button>
         <p id="load-error" style="display:none;color:#ff8fa3;margin-top:12px;font-weight:700;"></p>
+    </div>
+
+    <!-- Consent Modal: requires players to agree to categories before starting -->
+    <div id="consent-modal" class="overlay" style="display:none;">
+        <div class="consent-box">
+            <h2>Match Consent & Boundaries</h2>
+            <p style="max-width:520px;margin:8px 0 14px;color:#ddd;">Select which categories are allowed for this session and confirm that both players consent to play safely. You can change this later by selecting <strong>Manage Consent</strong>.</p>
+            <div class="consent-cats">
+                <label><input type="checkbox" id="consent-cat-sensual" checked> Sensual</label>
+                <label><input type="checkbox" id="consent-cat-domination" checked> Domination</label>
+                <label><input type="checkbox" id="consent-cat-erotic" checked> Erotic</label>
+                <label><input type="checkbox" id="consent-cat-playful" checked> Playful</label>
+            </div>
+            <div style="margin-top:12px;">
+                <label><input type="checkbox" id="consent-agree"> I confirm we both consent to play and understand the safeword/pause mechanism.</label>
+            </div>
+            <div style="margin-top:18px;display:flex;gap:12px;justify-content:center;">
+                <button class="btn-menu" onclick="App.acceptConsent()">Save & Continue</button>
+                <button class="btn-reset" onclick="document.getElementById('consent-modal').style.display='none'; document.body.classList.remove('overlay-open');">Cancel</button>
+            </div>
+            <p id="consent-error" style="display:none;color:#ff8fa3;margin-top:12px;font-weight:700;"></p>
+        </div>
+    </div>
+
+    <!-- Safeword / Pause Overlay -->
+    <div id="safeword-overlay" class="overlay" style="display:none;">
+        <h1 style="margin-bottom:18px;color:var(--danger-red);">PAUSED — SAFETY</h1>
+        <p style="color:#ddd;margin-bottom:18px;">The match is paused. Press and hold <strong>Resume</strong> for 1s to resume the match.</p>
+        <button id="btn-resume" class="btn-menu">Press & Hold to Resume</button>
     </div>
 
     <div id="strip-screen" class="overlay" style="display:none;">
@@ -69,10 +99,10 @@
         <h1 class="punish-header">GAME OVER!</h1>
         <p id="punish-msg">Select Punishment Category</p>
         <div id="punish-options">
-            <button class="btn-menu" onclick="App.spinPunishment('sensual')">Sensual</button>
-            <button class="btn-menu" onclick="App.spinPunishment('domination')">Domination</button>
-            <button class="btn-menu" onclick="App.spinPunishment('erotic')">Erotic</button>
-            <button class="btn-menu" onclick="App.spinPunishment('playful')">Playful</button>
+            <button class="btn-menu" data-cat="sensual" onclick="App.spinPunishment('sensual')">Sensual</button>
+            <button class="btn-menu" data-cat="domination" onclick="App.spinPunishment('domination')">Domination</button>
+            <button class="btn-menu" data-cat="erotic" onclick="App.spinPunishment('erotic')">Erotic</button>
+            <button class="btn-menu" data-cat="playful" onclick="App.spinPunishment('playful')">Playful</button>
         </div>
         <div id="punish-result" style="display:none;">
             <h2 id="punish-title"></h2>
@@ -133,6 +163,7 @@
         <button id="btn-success" class="btn-game" onclick="App.handleSuccess()">SUBMITTED</button>
         <button id="btn-reversal" class="btn-game" onclick="App.handleReversal()">REVERSED<br>SURVIVED</button>
         <button id="btn-tapout" class="btn-game" onclick="App.handleTapOut()">I TAP OUT (GIVE UP ROUND)</button>
+        <button id="btn-safeword" class="btn-game btn-safety" onclick="App.togglePause()">SAFETY</button>
     </div>
     </div> <!-- .page-container -->
 

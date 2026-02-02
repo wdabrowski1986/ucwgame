@@ -485,6 +485,18 @@ body.quiet-mode * { transition-duration: 0.15s !important; }
 /* Hide sensitive UI when panic is active */
 body.panic-mode #start-screen, body.panic-mode #hud, body.panic-mode #arena, body.panic-mode #controls-area, body.panic-mode #timer-strip, body.panic-mode .overlay, body.panic-mode .page-container { display: none !important; }
 
+/* Consent modal styles */
+.consent-box { max-width:760px; width:92%; background: rgba(16,6,10,0.94); border-radius:10px; padding:20px; border:1px solid rgba(255,255,255,0.04); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+.consent-box h2 { color: var(--gold); margin-bottom:6px; }
+.consent-cats { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+.consent-cats label { display:inline-flex; align-items:center; gap:8px; color:#ddd; }
+
+/* Safeword / pause overlay tweaks */
+#safeword-overlay { background: rgba(10,0,0,0.98); z-index: 800; }
+.btn-safety { background: linear-gradient(135deg, #ff8aa3, #ff3355); color: white; border-color: rgba(255,0,80,0.28); box-shadow: 0 6px 22px rgba(255,0,80,0.18); }
+#btn-resume { padding: 14px 22px; }
+
+
 /* Offline indicator */
 .offline-banner {
     position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 610; padding: 8px 16px; border-radius: 0 0 8px 8px;

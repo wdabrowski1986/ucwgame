@@ -32,7 +32,9 @@ const App = {
         currentCard: null, silentMode: false, isFinisher: false,
         wins: { wayne: 0, cindy: 0 },
         roundCount: 0,
-        isSetupPhase: false
+        isSetupPhase: false,
+        // Consent settings (persisted)
+        consent: { accepted: false, categories: { sensual: true, domination: true, erotic: true, playful: true } }
     },
 
     
@@ -61,6 +63,27 @@ const App = {
         }
         const silentChk = document.getElementById('silent-mode');
         if (silentChk && typeof cfg.silentMode !== 'undefined') { silentChk.checked = !!cfg.silentMode; this.state.silentMode = !!cfg.silentMode; document.body.classList.toggle('quiet-mode', !!cfg.silentMode); }
+
+        // Load consent settings if present
+        if (cfg.consentAccepted || cfg.consentCategories) {
+            this.state.consent.accepted = !!cfg.consentAccepted;
+            const cats = cfg.consentCategories || {};
+            this.state.consent.categories = Object.assign({}, this.state.consent.categories, cats);
+        }
+
+        // If consent modal exists, populate its checkboxes
+        const cSensual = document.getElementById('consent-cat-sensual');
+        const cDom = document.getElementById('consent-cat-domination');
+        const cErotic = document.getElementById('consent-cat-erotic');
+        const cPlayful = document.getElementById('consent-cat-playful');
+        const cAgree = document.getElementById('consent-agree');
+        try {
+            if (cSensual) cSensual.checked = !!this.state.consent.categories.sensual;
+            if (cDom) cDom.checked = !!this.state.consent.categories.domination;
+            if (cErotic) cErotic.checked = !!this.state.consent.categories.erotic;
+            if (cPlayful) cPlayful.checked = !!this.state.consent.categories.playful;
+            if (cAgree) cAgree.checked = !!this.state.consent.accepted;
+        } catch(e) {}
     },
 
     saveSettings: function() {
@@ -69,7 +92,9 @@ const App = {
             const silentChk = document.getElementById('silent-mode');
             const cfg = {
                 breakLength: breakInput ? parseInt(breakInput.value, 10) : this.state.setupDelaySeconds,
-                silentMode: silentChk ? !!silentChk.checked : !!this.state.silentMode
+                silentMode: silentChk ? !!silentChk.checked : !!this.state.silentMode,
+                consentAccepted: !!(this.state.consent && this.state.consent.accepted),
+                consentCategories: (this.state.consent && this.state.consent.categories) ? this.state.consent.categories : undefined
             };
             localStorage.setItem('ubc_settings', JSON.stringify(cfg));
         } catch(e) { console.warn('saveSettings failed', e); }
@@ -118,6 +143,78 @@ const App = {
         if (this._panicActive) this.deactivatePanic(); else this.activatePanic();
     },
 
+    // --- CONSENT & SAFEWORD (PAUSE) ---
+    showConsentModal: function() {
+        const el = document.getElementById('consent-modal'); if (!el) return;
+        // Populate with existing state
+        try {
+            const cSensual = document.getElementById('consent-cat-sensual');
+            const cDom = document.getElementById('consent-cat-domination');
+            const cErotic = document.getElementById('consent-cat-erotic');
+            const cPlayful = document.getElementById('consent-cat-playful');
+            if (cSensual) cSensual.checked = !!this.state.consent.categories.sensual;
+            if (cDom) cDom.checked = !!this.state.consent.categories.domination;
+            if (cErotic) cErotic.checked = !!this.state.consent.categories.erotic;
+            if (cPlayful) cPlayful.checked = !!this.state.consent.categories.playful;
+            const agree = document.getElementById('consent-agree'); if (agree) agree.checked = !!this.state.consent.accepted;
+        } catch(e) {}
+
+        el.style.display = 'flex'; document.body.classList.add('overlay-open');
+    },
+
+    acceptConsent: function() {
+        const agree = document.getElementById('consent-agree');
+        if (!agree || !agree.checked) {
+            const err = document.getElementById('consent-error'); if (err) { err.style.display = 'block'; err.innerText = 'Please confirm consent from both players to continue.'; }
+            return;
+        }
+        // Read categories
+        const cSensual = document.getElementById('consent-cat-sensual');
+        const cDom = document.getElementById('consent-cat-domination');
+        const cErotic = document.getElementById('consent-cat-erotic');
+        const cPlayful = document.getElementById('consent-cat-playful');
+        this.state.consent.categories.sensual = !!(cSensual && cSensual.checked);
+        this.state.consent.categories.domination = !!(cDom && cDom.checked);
+        this.state.consent.categories.erotic = !!(cErotic && cErotic.checked);
+        this.state.consent.categories.playful = !!(cPlayful && cPlayful.checked);
+        this.state.consent.accepted = true;
+        this.saveSettings();
+
+        const el = document.getElementById('consent-modal'); if (el) el.style.display = 'none'; document.body.classList.remove('overlay-open');
+        // Continue init/start flow now that consent is accepted
+        try { this.init(); } catch(e) {}
+    },
+
+    isCategoryAllowed: function(cat) {
+        if (!this.state || !this.state.consent || !this.state.consent.categories) return true;
+        return !!this.state.consent.categories[cat];
+    },
+
+    _paused: false,
+
+    activatePause: function() {
+        if (this._paused) return;
+        this._paused = true;
+        try { if (this.synth) this.synth.cancel(); } catch(e){}
+        this.vibrate([80,40,80], true);
+        document.body.classList.add('overlay-open');
+        document.getElementById('safeword-overlay').style.display = 'flex';
+        // Stop the timers
+        try { this.stopTimer(); if (this.state.pinTimer) { clearInterval(this.state.pinTimer); this.state.pinTimer = null; } } catch(e){}
+    },
+
+    deactivatePause: function() {
+        if (!this._paused) return;
+        this._paused = false;
+        document.getElementById('safeword-overlay').style.display = 'none';
+        document.body.classList.remove('overlay-open');
+        // Resume to next round after a short delay so players can reposition
+        this.vibrate([40,20,40], true);
+        setTimeout(() => this.nextRound(), 1400);
+    },
+
+    togglePause: function() { if (this._paused) this.deactivatePause(); else this.activatePause(); },
+
 
     init: async function() {
         // Restore any saved settings from previous sessions
@@ -135,6 +232,22 @@ const App = {
         if (silentChk) { silentChk.addEventListener('change', (e) => { this.state.silentMode = !!e.target.checked; document.body.classList.toggle('quiet-mode', !!e.target.checked); this.saveSettings(); }); }
         // Persist loaded or initial settings
         this.saveSettings();
+
+        // If consent hasn't been accepted, show consent modal and defer game start
+        if (!this.state.consent || !this.state.consent.accepted) {
+            this.showConsentModal();
+            return;
+        }
+
+        // Wire long-press resume button on the safeword overlay to avoid accidental resume
+        const resumeBtn = document.getElementById('btn-resume');
+        if (resumeBtn) {
+            let pressTimer = null;
+            const startHold = () => { pressTimer = setTimeout(()=>{ this.deactivatePause(); }, 900); };
+            const cancelHold = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+            resumeBtn.addEventListener('touchstart', startHold, { passive: true }); resumeBtn.addEventListener('mousedown', startHold);
+            resumeBtn.addEventListener('touchend', cancelHold, { passive: true }); resumeBtn.addEventListener('mouseup', cancelHold);
+        }
 
         // Mobile improvements: try to lock portrait and enable shake-to-panic + long-press on panic button
         try {
@@ -649,6 +762,14 @@ const App = {
     },
 
     triggerSensualReward: function() {
+        // Respect consent: skip sensual rewards if not allowed
+        if (!this.isCategoryAllowed('sensual')) {
+            this.announce('Sensual reward skipped by consent.', 'normal');
+            this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+            setTimeout(() => this.nextRound(), 1200);
+            return;
+        }
+
         // Block healing in Sudden Death or late rounds
         if (this.state.stipulation === 'SUDDEN_DEATH' || this.state.roundCount >= 12) {
             this.announce("NO REST! Switching Sides!", 'high');
@@ -707,6 +828,13 @@ const App = {
 
     // --- MINI PUNISHMENT (quick, between-move penalties) ---
     triggerMiniPunishment: function() {
+        // Respect consent: if playful category not allowed, skip
+        if (!this.isCategoryAllowed('playful')) {
+            this.announce('Mini punishment skipped by consent.', 'normal');
+            setTimeout(() => { this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne'; this.resetCombo(); this.nextRound(); }, 1400);
+            return;
+        }
+
         // Pick a playful punishment from the list (supports structured entries)
         const list = DATA.punishments.playful || [{name: "Mini Tickle", duration: 10}];
         const item = list[Math.floor(Math.random() * list.length)];
@@ -794,13 +922,37 @@ const App = {
         document.getElementById('winner-screen').style.display = 'none';
         // show punishment overlay
         document.getElementById('punish-result').style.display = 'none';
-        document.getElementById('punish-options').style.display = 'flex';
         document.getElementById('punishment-screen').style.display = 'flex';
-        document.getElementById('punish-msg').innerText = `Select Punishment.`;
+
+        // Show only categories allowed by consent
+        const options = document.querySelectorAll('#punish-options button[data-cat]');
+        let anyVisible = false;
+        options.forEach(btn => {
+            const cat = btn.getAttribute('data-cat');
+            if (!this.isCategoryAllowed(cat)) { btn.style.display = 'none'; } else { btn.style.display = 'block'; anyVisible = true; }
+        });
+        if (!anyVisible) {
+            document.getElementById('punish-msg').innerText = `No permitted punishment categories. Please update consent.`;
+            document.getElementById('punish-options').style.display = 'none';
+        } else {
+            document.getElementById('punish-msg').innerText = `Select Punishment.`;
+            document.getElementById('punish-options').style.display = 'flex';
+        }
+
+        document.getElementById('punishment-screen').style.display = 'flex';
         // body.overlay-open remains set
     },
 
     spinPunishment: function(cat) {
+        // Validate against consent
+        if (!this.isCategoryAllowed(cat)) {
+            document.getElementById('punish-options').style.display = 'none';
+            document.getElementById('punish-result').style.display = 'block';
+            document.getElementById('punish-title').innerText = 'UNAVAILABLE';
+            document.getElementById('punish-desc').innerText = 'This punishment category is not permitted by current consent settings.';
+            return;
+        }
+
         document.getElementById('punish-options').style.display = 'none';
         const list = DATA.punishments[cat];
         const result = list[Math.floor(Math.random() * list.length)];
