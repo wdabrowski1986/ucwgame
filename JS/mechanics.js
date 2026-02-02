@@ -136,15 +136,41 @@ const App = {
         // Persist loaded or initial settings
         this.saveSettings();
 
-        // Quick-hide keyboard binding (P toggles panic, Escape exits)
+        // Mobile improvements: try to lock portrait and enable shake-to-panic + long-press on panic button
+        try {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('portrait').catch(e => console.log('Orientation lock failed', e));
+            }
+        } catch(e) { /* ignore */ }
+
+        // Shake-to-panic detection (simple threshold-based)
+        this._lastShakeAt = 0;
+        this._shakeThreshold = 15; // approximate m/s^2 threshold
+        this._shakeCooldown = 2000; // ms
         const self = this;
-        document.addEventListener('keydown', function(e){
+        window.addEventListener('devicemotion', function(event){
             try {
-                if ((e.key === 'p' || e.key === 'P')) { self.togglePanic(); }
-                if (e.key === 'Escape' && self._panicActive) { self.deactivatePanic(); }
-            } catch(ex) { /* ignore */ }
-        });
-        
+                const acc = event.accelerationIncludingGravity || event.acceleration;
+                if (!acc) return;
+                const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+                if (total > self._shakeThreshold) {
+                    const now = Date.now();
+                    if (now - self._lastShakeAt > self._shakeCooldown) {
+                        self._lastShakeAt = now;
+                        self.activatePanic();
+                    }
+                }
+            } catch(e) { }
+        }, { passive: true });
+
+        // Long-press to quickly panic (avoid accidental taps)
+        const panicBtnEl = document.getElementById('btn-panic');
+        if (panicBtnEl) {
+            let pressTimer = null;
+            panicBtnEl.addEventListener('touchstart', function(){ pressTimer = setTimeout(()=>{ self.activatePanic(); }, 700); }, { passive: true });
+            panicBtnEl.addEventListener('touchend', function(){ if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } }, { passive: true });
+        }
+
         // Hide start screen immediately to avoid blocking on mobile when fullscreen/wakeLock prompt appears
         document.getElementById('start-screen').style.display = 'none';
         // Mark that a match is now running so responsive UI can show/hide controls appropriately

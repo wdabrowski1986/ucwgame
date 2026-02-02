@@ -1,0 +1,13 @@
+{
+  "name": "Championship Wrestling",
+  "short_name": "UCW",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#120007",
+  "icons": [
+    { "src": "images/belt.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "images/ring-bg.jpg", "sizes": "512x512", "type": "image/jpg" }
+  ]
+}
