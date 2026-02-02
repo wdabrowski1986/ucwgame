@@ -174,6 +174,14 @@
     <script>
         // Script loader tracker: records onload/onerror for each script so we can debug mobile issues
         window.__scriptLoadInfo = window.__scriptLoadInfo || [];
+        function updateStartButton(){
+            const startBtn = document.querySelector('#start-screen .btn-menu');
+            if(!startBtn) return;
+            const errors = window.__scriptLoadInfo && window.__scriptLoadInfo.some(s => s.status === 'error');
+            // If there are errors reported, keep start disabled. Otherwise enable it.
+            startBtn.disabled = !!errors;
+            console.info('Start button enabled:', !errors);
+        }
         function __recordScript(name, status){
             try{
                 window.__scriptLoadInfo.push({name:name, status:status, time:new Date().toISOString()});
@@ -184,8 +192,12 @@
                     var details = document.getElementById('error-log'); if(details) details.style.display = 'block';
                 }
                 console.info('Script loader:', name, status);
+                // Update start button state after each script report
+                setTimeout(updateStartButton, 50);
             }catch(e){ console.warn('Script record failed', e); }
         }
+        // Run an initial check in case scripts already reported
+        setTimeout(updateStartButton, 100);
     </script>
 
     <script src="JS/moves.js" onload="__recordScript('JS/moves.js','ok')" onerror="__recordScript('JS/moves.js','error')"></script>
