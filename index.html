@@ -51,6 +51,20 @@
             </select>
             <div id="intensity-hint" class="intensity-hint" aria-live="polite">Intensity: Normal — Balanced (moderate damage, standard strip chance).</div>
         </div>
+
+        <div class="settings-row">
+            <label for="max-skips">Max Skips / Round</label>
+            <input type="number" id="max-skips" min="0" max="10" value="3">
+            <div class="small-note">Configurable for playtesting</div>
+        </div>
+
+        <div class="settings-row">
+            <label for="tap-threshold-medium">Medium Threshold</label>
+            <input type="number" id="tap-threshold-medium" min="1" max="99" value="3">
+            <label for="tap-threshold-big">Big Threshold</label>
+            <input type="number" id="tap-threshold-big" min="2" max="999" value="8">
+            <div class="small-note">Taps &gt;= Medium/Big determine punishment severity</div>
+        </div>
         <p id="load-error" style="display:none;color:#ff8fa3;margin-top:12px;font-weight:700;"></p>
     </div>
 

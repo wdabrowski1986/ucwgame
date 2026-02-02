@@ -107,10 +107,14 @@ const App = {
         // 'punish' path: determine severity based on tapCount
         const taps = this.state.tapCount || 0;
         let sev = 'MINI';
-        if (taps >= 8) sev = 'BIG';
-        else if (taps >= 3) sev = 'MEDIUM';
+        const med = (this.state.tapThresholds && this.state.tapThresholds.medium) ? this.state.tapThresholds.medium : 3;
+        const big = (this.state.tapThresholds && this.state.tapThresholds.big) ? this.state.tapThresholds.big : 8;
+        if (taps >= big) sev = 'BIG';
+        else if (taps >= med) sev = 'MEDIUM';
         this.announce(`Applying ${sev} punishment based on ${taps} submissions.`, 'high');
         this.applyPunishmentBySeverity(sev);
+        // Reset tap counter after applying punishment
+        this.state.tapCount = 0; const tEl = document.getElementById('tap-count'); if (tEl) tEl.innerText = '0';
     },
 
     quitRound: function() {
@@ -167,6 +171,21 @@ const App = {
             // Apply intensity mapping so loaded preferences take effect immediately
             try { this.applyIntensitySettings(); } catch(e) { console.warn('applyIntensitySettings failed', e); }
         }
+
+        // Load maxSkips and tap thresholds if present
+        if (typeof cfg.maxSkipsPerRound !== 'undefined') {
+            this.state.maxSkipsPerRound = parseInt(cfg.maxSkipsPerRound, 10) || this.state.maxSkipsPerRound;
+            const el = document.getElementById('max-skips'); if (el) el.value = this.state.maxSkipsPerRound;
+            try { this.updateSkipUI(); } catch(e) {}
+        }
+        if (cfg.tapThresholds) {
+            this.state.tapThresholds = this.state.tapThresholds || {};
+            this.state.tapThresholds.medium = parseInt(cfg.tapThresholds.medium, 10) || this.state.tapThresholds.medium;
+            this.state.tapThresholds.big = parseInt(cfg.tapThresholds.big, 10) || this.state.tapThresholds.big;
+            const m = document.getElementById('tap-threshold-medium'); if (m) m.value = this.state.tapThresholds.medium;
+            const b = document.getElementById('tap-threshold-big'); if (b) b.value = this.state.tapThresholds.big;
+            try { this.applyIntensitySettings(); } catch(e) {}
+        }
     },
 
     saveSettings: function() {
@@ -177,7 +196,12 @@ const App = {
             const cfg = {
                 breakLength: breakInput ? parseInt(breakInput.value, 10) : this.state.setupDelaySeconds,
                 silentMode: silentChk ? !!silentChk.checked : !!this.state.silentMode,
-                intensity: intensitySel ? intensitySel.value : this.state.intensity
+                intensity: intensitySel ? intensitySel.value : this.state.intensity,
+                maxSkipsPerRound: (document.getElementById('max-skips') ? parseInt(document.getElementById('max-skips').value, 10) : this.state.maxSkipsPerRound),
+                tapThresholds: {
+                    medium: (document.getElementById('tap-threshold-medium') ? parseInt(document.getElementById('tap-threshold-medium').value, 10) : this.state.tapThresholds.medium),
+                    big: (document.getElementById('tap-threshold-big') ? parseInt(document.getElementById('tap-threshold-big').value, 10) : this.state.tapThresholds.big)
+                }
             };
             localStorage.setItem('ubc_settings', JSON.stringify(cfg));
         } catch(e) { console.warn('saveSettings failed', e); }
@@ -288,6 +312,28 @@ const App = {
         const intensitySel = document.getElementById('match-intensity');
         if (intensitySel) { intensitySel.addEventListener('change', (e) => { this.state.intensity = e.target.value; this.saveSettings(); try { this.applyIntensitySettings(); } catch(e){ console.warn('applyIntensitySettings failed', e); } }); }
 
+        // Wire Max Skips input
+        const maxSkipsEl = document.getElementById('max-skips');
+        if (maxSkipsEl) { maxSkipsEl.addEventListener('input', (e) => { this.state.maxSkipsPerRound = Math.max(0, parseInt(e.target.value, 10) || 0); this.saveSettings(); try { this.updateSkipUI(); } catch(e){} }); }
+
+        // Wire Tap threshold inputs (validate relation between medium < big)
+        const tMed = document.getElementById('tap-threshold-medium');
+        const tBig = document.getElementById('tap-threshold-big');
+        if (tMed) { tMed.addEventListener('input', (e) => {
+            let v = Math.max(1, parseInt(e.target.value, 10) || 1);
+            this.state.tapThresholds = this.state.tapThresholds || {};
+            this.state.tapThresholds.medium = v;
+            if (this.state.tapThresholds.big && v >= this.state.tapThresholds.big) { this.state.tapThresholds.big = v + 1; if (tBig) tBig.value = this.state.tapThresholds.big; }
+            this.saveSettings(); try { this.applyIntensitySettings(); } catch(e){}
+        }); }
+        if (tBig) { tBig.addEventListener('input', (e) => {
+            let v = Math.max(2, parseInt(e.target.value, 10) || 2);
+            this.state.tapThresholds = this.state.tapThresholds || {};
+            this.state.tapThresholds.big = v;
+            if (this.state.tapThresholds.medium && v <= this.state.tapThresholds.medium) { this.state.tapThresholds.medium = Math.max(1, v - 1); if (tMed) tMed.value = this.state.tapThresholds.medium; }
+            this.saveSettings(); try { this.applyIntensitySettings(); } catch(e){}
+        }); }
+
         // Wire long-press resume button on the safeword overlay to avoid accidental resume
         const resumeBtn = document.getElementById('btn-resume');
         if (resumeBtn) {
@@ -369,6 +415,8 @@ const App = {
         }
 
         this.resetUI();
+        // Reset tap counter for the upcoming action
+        this.state.tapCount = 0; const tEl = document.getElementById('tap-count'); if (tEl) tEl.innerText = '0';
         const att = this.state.attacker;
         const oppHealth = att === 'wayne' ? this.state.p2Health : this.state.p1Health;
         
