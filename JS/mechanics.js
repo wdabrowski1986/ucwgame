@@ -75,6 +75,50 @@ const App = {
         } catch(e) { console.warn('saveSettings failed', e); }
     },
 
+    // --- PANIC / QUICK-HIDE ---
+    _panicActive: false,
+    _panicPrevSilent: false,
+
+    activatePanic: function() {
+        if (this._panicActive) return;
+        this._panicActive = true;
+        // Remember previous prefs
+        this._panicPrevSilent = !!this.state.silentMode;
+
+        // Cancel speech and vibrate a short confirmation
+        try { if (this.synth) this.synth.cancel(); } catch(e){}
+        this.vibrate([60,30,60], true);
+
+        // Enter panic UI: make app quiet and show innocuous screen
+        this.state.silentMode = true;
+        document.body.classList.add('panic-mode');
+        const el = document.getElementById('panic-screen'); if (el) el.style.display = 'flex';
+
+        // Stop timers so the match doesn't progress while hidden
+        try { this.stopTimer(); if (this.state.pinTimer) { clearInterval(this.state.pinTimer); this.state.pinTimer = null; } } catch(e){}
+    },
+
+    deactivatePanic: function() {
+        if (!this._panicActive) return;
+        this._panicActive = false;
+
+        // Restore previous silent setting
+        this.state.silentMode = !!this._panicPrevSilent;
+        document.body.classList.remove('panic-mode');
+        const el = document.getElementById('panic-screen'); if (el) el.style.display = 'none';
+
+        // Persist restored setting
+        this.saveSettings();
+
+        // Gentle vibrate to indicate return
+        this.vibrate([30,20,30], true);
+    },
+
+    togglePanic: function() {
+        if (this._panicActive) this.deactivatePanic(); else this.activatePanic();
+    },
+
+
     init: async function() {
         // Restore any saved settings from previous sessions
         this.state.silentMode = document.getElementById('silent-mode').checked;
@@ -91,6 +135,15 @@ const App = {
         if (silentChk) { silentChk.addEventListener('change', (e) => { this.state.silentMode = !!e.target.checked; document.body.classList.toggle('quiet-mode', !!e.target.checked); this.saveSettings(); }); }
         // Persist loaded or initial settings
         this.saveSettings();
+
+        // Quick-hide keyboard binding (P toggles panic, Escape exits)
+        const self = this;
+        document.addEventListener('keydown', function(e){
+            try {
+                if ((e.key === 'p' || e.key === 'P')) { self.togglePanic(); }
+                if (e.key === 'Escape' && self._panicActive) { self.deactivatePanic(); }
+            } catch(ex) { /* ignore */ }
+        });
         
         // Hide start screen immediately to avoid blocking on mobile when fullscreen/wakeLock prompt appears
         document.getElementById('start-screen').style.display = 'none';
