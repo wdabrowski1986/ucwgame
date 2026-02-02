@@ -123,8 +123,16 @@ const App = {
             this.state.minPunishChance = 0.28;
             this.state.minPunishDuration = 8;
         }
-        // Update a small UI hint if present
-        const hint = document.getElementById('intensity-hint'); if (hint) hint.innerText = `Intensity: ${i}`;
+        // Update a small UI hint if present (short description + key params)
+        const hint = document.getElementById('intensity-hint');
+        if (hint) {
+            let desc = 'Balanced: moderate damage, standard strip chance.';
+            if (i === 'SOFT') desc = 'Soft: gentler moves, higher heal, lower strip/punish chances.';
+            else if (i === 'ROUGH') desc = 'Rough: stronger moves, lower heals, higher strip/punish chances.';
+            const dmgPct = Math.round(this.state.baseDamagePercent * 100);
+            const stripPct = Math.round((this.state.stripChance && this.state.stripChance[1]) ? this.state.stripChance[1] * 100 : 0);
+            hint.innerText = `Intensity: ${i} — ${desc} (Damage ~${dmgPct}%, Strip ~${stripPct}% for layer 1)`;
+        }
     },
 
     isCategoryAllowed: function(cat) {

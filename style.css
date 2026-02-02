@@ -468,13 +468,11 @@ body.quiet-mode .belt-display { background: rgba(0,0,0,0.28) !important; box-sha
 body.quiet-mode #timer-fill { transition: width 0.5s ease !important; }
 body.quiet-mode * { transition-duration: 0.15s !important; }
 
+#intensity-hint { color: #ddd; font-size: 0.95rem; margin-top:8px; opacity:0.95; }
 
 
-/* Consent modal styles */
-.consent-box { max-width:760px; width:92%; background: rgba(16,6,10,0.94); border-radius:10px; padding:20px; border:1px solid rgba(255,255,255,0.04); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
-.consent-box h2 { color: var(--gold); margin-bottom:6px; }
-.consent-cats { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
-.consent-cats label { display:inline-flex; align-items:center; gap:8px; color:#ddd; }
+
+
 
 /* Safeword / pause overlay tweaks */
 #safeword-overlay { background: rgba(10,0,0,0.98); z-index: 800; }
