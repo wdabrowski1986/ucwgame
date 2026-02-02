@@ -202,7 +202,7 @@
 
     <!-- Diagnostic panel (visit with ?diag=1 to auto-show and run checks) -->
     <div id="diag-panel" style="display:none;position:fixed;bottom:12px;left:12px;right:12px;z-index:900;background:rgba(0,0,0,0.9);color:#fff;padding:12px;border-radius:8px;max-height:50vh;overflow:auto;font-family:monospace;white-space:pre-wrap;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Diagnostic</strong><button onclick="document.getElementById('diag-panel').style.display='none'" class="btn-reset">Close</button></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Diagnostic</strong><div><button id="diag-accept-start" class="btn-menu" style="display:none;margin-right:8px;">Accept & Start</button><button onclick="document.getElementById('diag-panel').style.display='none'" class="btn-reset">Close</button></div></div>
         <pre id="diag-pre" style="color:#ddd;font-size:0.9rem"></pre>
     </div>
     <script>
@@ -221,6 +221,33 @@
         if (location.search && location.search.indexOf('diag=1') !== -1) { window.addEventListener('load', runDiag); }
         // expose for manual run
         window.runUCWDiag = runDiag;
+
+        // Helper to accept consent and start the match (intended for diagnostics/test only)
+        window.acceptAndStart = function(){
+            try {
+                const cSensual = document.getElementById('consent-cat-sensual'); if (cSensual) cSensual.checked = true;
+                const cDom = document.getElementById('consent-cat-domination'); if (cDom) cDom.checked = true;
+                const cErotic = document.getElementById('consent-cat-erotic'); if (cErotic) cErotic.checked = true;
+                const cPlayful = document.getElementById('consent-cat-playful'); if (cPlayful) cPlayful.checked = true;
+                const agree = document.getElementById('consent-agree'); if (agree) agree.checked = true;
+                // Call the same accept flow as the modal
+                if (window.App && typeof App.acceptConsent === 'function') {
+                    App.acceptConsent();
+                } else if (window.App && typeof App.init === 'function') {
+                    // fallback: mark consent in state and start
+                    if (!App.state.consent) App.state.consent = { accepted: true, categories: { sensual:true,domination:true,erotic:true,playful:true }};
+                    App.init();
+                }
+            } catch(e){ console.warn('acceptAndStart failed', e); }
+        };
+
+        // Show Accept & Start in diagnostics when consent is not accepted
+        (function(){
+            const btn = document.getElementById('diag-accept-start'); if(!btn) return;
+            btn.addEventListener('click', function(){ window.acceptAndStart(); });
+            const origRun = window.runUCWDiag;
+            window.runUCWDiag = function(){ origRun && origRun(); try{ const accepted = !!(window.App && App.state && App.state.consent && App.state.consent.accepted); if (!accepted) btn.style.display = 'inline-block'; else btn.style.display = 'none'; } catch(e){} };
+        })();
     })();
     </script>
 
