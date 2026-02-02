@@ -485,3 +485,15 @@ body.quiet-mode * { transition-duration: 0.15s !important; }
 /* Hide sensitive UI when panic is active */
 body.panic-mode #start-screen, body.panic-mode #hud, body.panic-mode #arena, body.panic-mode #controls-area, body.panic-mode #timer-strip, body.panic-mode .overlay, body.panic-mode .page-container { display: none !important; }
 
+/* Offline indicator */
+.offline-banner {
+    position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 610; padding: 8px 16px; border-radius: 0 0 8px 8px;
+    background: #222; color: #ffd; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+
+/* Service worker update prompt */
+.sw-update { position: fixed; bottom: 68px; left: 12px; right: 12px; max-width: 720px; margin: 0 auto; z-index: 610; display:flex; justify-content:center; }
+.sw-update > div, .sw-update button { background: rgba(255,255,255,0.95); border-radius: 8px; padding: 10px 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+.sw-update button { border: none; font-weight:700; cursor: pointer; }
+
+

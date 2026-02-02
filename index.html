@@ -179,6 +179,50 @@
 
     <script>window.onload = function() { try{ App.loadHistory(); }catch(e){ __recordScript('App.init','missing'); console.error('App.loadHistory failed', e); }};</script>
 
+    <!-- Offline banner and service worker update prompt -->
+    <div id="offline-banner" class="offline-banner" style="display:none;">Offline — serving cached content</div>
+    <div id="sw-update" class="sw-update" style="display:none;">A new version is available. <button id="sw-update-btn">Update now</button></div>
+
+    <script>
+    // Service Worker registration + online/offline UI handling
+    (function(){
+        const offlineBanner = document.getElementById('offline-banner');
+        const swUpdate = document.getElementById('sw-update');
+        const swUpdateBtn = document.getElementById('sw-update-btn');
+
+        function updateOnlineStatus(){ if (navigator.onLine) { offlineBanner.style.display = 'none'; } else { offlineBanner.style.display = 'block'; } }
+        window.addEventListener('online', updateOnlineStatus); window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                console.log('ServiceWorker registered', reg);
+                if (reg.waiting) {
+                    swUpdate.style.display = 'block';
+                }
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            swUpdate.style.display = 'block';
+                        }
+                    });
+                });
+            }).catch(err => console.warn('SW registration failed', err));
+
+            // reload to apply new SW when user clicks update
+            swUpdateBtn && swUpdateBtn.addEventListener('click', function(){
+                navigator.serviceWorker.getRegistration().then(function(reg){
+                    if (reg && reg.waiting) { reg.waiting.postMessage({type:'SKIP_WAITING'}); }
+                });
+            });
+
+            // When the new SW takes control, reload so users see new content
+            navigator.serviceWorker.addEventListener('controllerchange', function(){ window.location.reload(); });
+        }
+    })();
+    </script>
+
     <!-- Runtime loader check + deeper diagnostics for mobile -->
     <script>
     (function(){
