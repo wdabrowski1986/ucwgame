@@ -80,7 +80,7 @@ self.addEventListener('fetch', (event) => {
         const copy = res.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
         return res;
-      }).catch(() => caches.match('/index.html'))
+      }).catch(() => caches.match('index.html'))
     );
     return;
   }
