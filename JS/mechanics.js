@@ -100,48 +100,7 @@ const App = {
         } catch(e) { console.warn('saveSettings failed', e); }
     },
 
-    // --- PANIC / QUICK-HIDE ---
-    _panicActive: false,
-    _panicPrevSilent: false,
 
-    activatePanic: function() {
-        if (this._panicActive) return;
-        this._panicActive = true;
-        // Remember previous prefs
-        this._panicPrevSilent = !!this.state.silentMode;
-
-        // Cancel speech and vibrate a short confirmation
-        try { if (this.synth) this.synth.cancel(); } catch(e){}
-        this.vibrate([60,30,60], true);
-
-        // Enter panic UI: make app quiet and show innocuous screen
-        this.state.silentMode = true;
-        document.body.classList.add('panic-mode');
-        const el = document.getElementById('panic-screen'); if (el) el.style.display = 'flex';
-
-        // Stop timers so the match doesn't progress while hidden
-        try { this.stopTimer(); if (this.state.pinTimer) { clearInterval(this.state.pinTimer); this.state.pinTimer = null; } } catch(e){}
-    },
-
-    deactivatePanic: function() {
-        if (!this._panicActive) return;
-        this._panicActive = false;
-
-        // Restore previous silent setting
-        this.state.silentMode = !!this._panicPrevSilent;
-        document.body.classList.remove('panic-mode');
-        const el = document.getElementById('panic-screen'); if (el) el.style.display = 'none';
-
-        // Persist restored setting
-        this.saveSettings();
-
-        // Gentle vibrate to indicate return
-        this.vibrate([30,20,30], true);
-    },
-
-    togglePanic: function() {
-        if (this._panicActive) this.deactivatePanic(); else this.activatePanic();
-    },
 
     // --- CONSENT & SAFEWORD (PAUSE) ---
     showConsentModal: function() {
@@ -249,40 +208,14 @@ const App = {
             resumeBtn.addEventListener('touchend', cancelHold, { passive: true }); resumeBtn.addEventListener('mouseup', cancelHold);
         }
 
-        // Mobile improvements: try to lock portrait and enable shake-to-panic + long-press on panic button
+        // Mobile improvements: try to lock portrait and wire resume button
         try {
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('portrait').catch(e => console.log('Orientation lock failed', e));
             }
         } catch(e) { /* ignore */ }
 
-        // Shake-to-panic detection (simple threshold-based)
-        this._lastShakeAt = 0;
-        this._shakeThreshold = 15; // approximate m/s^2 threshold
-        this._shakeCooldown = 2000; // ms
-        const self = this;
-        window.addEventListener('devicemotion', function(event){
-            try {
-                const acc = event.accelerationIncludingGravity || event.acceleration;
-                if (!acc) return;
-                const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-                if (total > self._shakeThreshold) {
-                    const now = Date.now();
-                    if (now - self._lastShakeAt > self._shakeCooldown) {
-                        self._lastShakeAt = now;
-                        self.activatePanic();
-                    }
-                }
-            } catch(e) { }
-        }, { passive: true });
 
-        // Long-press to quickly panic (avoid accidental taps)
-        const panicBtnEl = document.getElementById('btn-panic');
-        if (panicBtnEl) {
-            let pressTimer = null;
-            panicBtnEl.addEventListener('touchstart', function(){ pressTimer = setTimeout(()=>{ self.activatePanic(); }, 700); }, { passive: true });
-            panicBtnEl.addEventListener('touchend', function(){ if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } }, { passive: true });
-        }
 
         // Hide start screen immediately to avoid blocking on mobile when fullscreen/wakeLock prompt appears
         document.getElementById('start-screen').style.display = 'none';

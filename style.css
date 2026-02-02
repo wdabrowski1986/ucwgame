@@ -467,23 +467,7 @@ body.quiet-mode .belt-display { background: rgba(0,0,0,0.28) !important; box-sha
 body.quiet-mode #timer-fill { transition: width 0.5s ease !important; }
 body.quiet-mode * { transition-duration: 0.15s !important; }
 
-/* Panic / Quick-Hide styles */
-.btn-panic {
-    position: fixed; top: calc(env(safe-area-inset-top, 12px)); right: 12px; z-index: 600;
-    background: rgba(255,255,255,0.06); color: white; border: 1px solid rgba(255,255,255,0.06);
-    padding: 8px 12px; border-radius: 8px; font-weight:700; letter-spacing:1px;
-    backdrop-filter: blur(6px); cursor: pointer;
-}
 
-.panic-screen {
-    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;
-    background: linear-gradient(180deg, #fafafa, #f3f3f3); color: #111; z-index: 700;
-}
-.panic-inner { width: min(800px, 96%); background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-.panic-inner h2 { margin-top: 0; color: #222; }
-
-/* Hide sensitive UI when panic is active */
-body.panic-mode #start-screen, body.panic-mode #hud, body.panic-mode #arena, body.panic-mode #controls-area, body.panic-mode #timer-strip, body.panic-mode .overlay, body.panic-mode .page-container { display: none !important; }
 
 /* Consent modal styles */
 .consent-box { max-width:760px; width:92%; background: rgba(16,6,10,0.94); border-radius:10px; padding:20px; border:1px solid rgba(255,255,255,0.04); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
