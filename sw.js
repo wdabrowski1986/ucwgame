@@ -1,4 +1,5 @@
-const CACHE_NAME = 'ucwgame-v1';
+// Bump the cache version when adding/removing assets
+const CACHE_NAME = 'ucwgame-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -7,8 +8,40 @@ const ASSETS = [
   '/JS/moves.js',
   '/JS/secrets.js',
   '/manifest.json',
+  // Core imagery used by the app (precache for fully offline experience)
   '/images/ring-bg.jpg',
-  '/images/belt.png'
+  '/images/belt.png',
+  '/images/69-Pin.png',
+  '/images/absolute-zero.png',
+  '/images/amazon-straddle.png',
+  '/images/atlas-hold.png',
+  '/images/ball-breaker.png',
+  '/images/body-lock.png',
+  '/images/breast-smother.png',
+  '/images/full-mount-control.png',
+  '/images/goddess-scissors.png',
+  '/images/grapevine-hold.png',
+  '/images/jaw-clamp.png',
+  '/images/queens-throne.png',
+  '/images/sole-priority.png',
+  '/images/the-anaconda.png',
+  '/images/the-black-widow.png',
+  '/images/the-bulldozer.png',
+  '/images/the-conquerers-claim.png',
+  '/images/the-crucible.png',
+  '/images/the-crucifix.png',
+  '/images/the-crusher.png',
+  '/images/the-display.png',
+  '/images/the-gravity-well.png',
+  '/images/the-lockdown.png',
+  '/images/the-matriarch.png',
+  '/images/the-monolith.png',
+  '/images/the-pillager.png',
+  '/images/the-serpents-coil.png',
+  '/images/the-stockade.png',
+  '/images/the-throne-of-thorns.png',
+  '/images/the-venus-trap.png',
+  '/images/vice-grip.png'
 ];
 
 self.addEventListener('install', (event) => {
