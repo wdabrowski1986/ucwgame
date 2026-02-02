@@ -13,7 +13,9 @@
     <meta name="theme-color" content="#120007">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="/manifest.json">
+    <!-- Use relative paths so manifest and service worker load correctly on GitHub Pages (repo subpath) -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="images/belt.png" type="image/png">
     <link rel="apple-touch-icon" href="images/belt.png">
 </head>
 <body>
@@ -208,8 +210,8 @@
         updateOnlineStatus();
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').then(reg => {
-                console.log('ServiceWorker registered', reg);
+            // register relative to the current path so it works on GitHub Pages subpaths (e.g., /ucwgame/)
+            navigator.serviceWorker.register('sw.js', { scope: './' }).then(reg => {
                 if (reg.waiting) {
                     swUpdate.style.display = 'block';
                 }
