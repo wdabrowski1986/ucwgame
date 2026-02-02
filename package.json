@@ -1,0 +1,7 @@
+{
+  "name": "ucwgame",
+  "version": "1.0.0",
+  "scripts": {
+    "generate-sw-assets": "node tools/generate_sw_assets.js"
+  }
+}

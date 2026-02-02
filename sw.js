@@ -1,6 +1,8 @@
 // Bump the cache version when adding/removing assets
 const CACHE_NAME = 'ucwgame-v2';
 const ASSETS = [
+  /* AUTO_GENERATED_ASSETS_START */
+
   '/',
   '/index.html',
   '/style.css',
@@ -8,14 +10,12 @@ const ASSETS = [
   '/JS/moves.js',
   '/JS/secrets.js',
   '/manifest.json',
-  // Core imagery used by the app (precache for fully offline experience)
-  '/images/ring-bg.jpg',
-  '/images/belt.png',
   '/images/69-Pin.png',
   '/images/absolute-zero.png',
   '/images/amazon-straddle.png',
   '/images/atlas-hold.png',
   '/images/ball-breaker.png',
+  '/images/belt.png',
   '/images/body-lock.png',
   '/images/breast-smother.png',
   '/images/full-mount-control.png',
@@ -23,6 +23,7 @@ const ASSETS = [
   '/images/grapevine-hold.png',
   '/images/jaw-clamp.png',
   '/images/queens-throne.png',
+  '/images/ring-bg.jpg',
   '/images/sole-priority.png',
   '/images/the-anaconda.png',
   '/images/the-black-widow.png',
@@ -41,7 +42,9 @@ const ASSETS = [
   '/images/the-stockade.png',
   '/images/the-throne-of-thorns.png',
   '/images/the-venus-trap.png',
-  '/images/vice-grip.png'
+  '/images/vice-grip.png',
+
+/* AUTO_GENERATED_ASSETS_END */
 ];
 
 self.addEventListener('install', (event) => {
