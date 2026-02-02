@@ -1,0 +1,18 @@
+#!/bin/sh
+# Pre-push hook: ensure sw.js is up-to-date before allowing push
+set -e
+
+echo "[hook] Running generate-sw-assets..."
+if ! npm run generate-sw-assets; then
+  echo "[hook] generate-sw-assets failed. Aborting push." >&2
+  exit 1
+fi
+
+# Check if sw.js was modified by the generator
+if ! git diff --quiet --exit-code -- sw.js; then
+  echo "[hook] sw.js was updated by generate-sw-assets. Please review and commit the changes before pushing." >&2
+  echo "[hook] To proceed: git add sw.js && git commit -m 'chore(build): update sw.js assets' && git push" >&2
+  exit 1
+fi
+
+exit 0

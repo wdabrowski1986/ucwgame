@@ -2,6 +2,7 @@
   "name": "ucwgame",
   "version": "1.0.0",
   "scripts": {
-    "generate-sw-assets": "node tools/generate_sw_assets.js"
+    "generate-sw-assets": "node tools/generate_sw_assets.js",
+    "prepare": "git config core.hooksPath .githooks || true"
   }
 }
