@@ -256,6 +256,8 @@ const App = {
     nextRound: function() {
         this.stopTimer();
         this.state.roundCount++;
+        // Reset per-round skip counter (max 3 skips per round)
+        this.state.skipCount = 0;
 
         // Rule Checks
         if (this.state.roundCount === 12) this.announce("SUDDEN DEATH! Healing Disabled!", 'high');
@@ -286,9 +288,8 @@ const App = {
         const move = deck[Math.floor(Math.random() * deck.length)];
         this.state.currentCard = move;
         const attackerName = att.toUpperCase();
-        
-        // Update UI Text
-        document.getElementById('event-badge').style.display = this.state.isFinisher ? 'block' : 'none';
+            // Ensure skip counter exists
+            if (typeof this.state.skipCount === 'undefined') this.state.skipCount = 0;
         document.getElementById('event-badge').innerText = this.state.isFinisher ? 'FINISHER' : 'MOVE';
         
         // Image Loading with Fallback and smooth fade
@@ -343,6 +344,8 @@ const App = {
             this.state.isSetupPhase = false;
             document.getElementById('controls-area').style.opacity = '1';
             document.getElementById('btn-success').disabled = false;
+            // Enable skip once move is available
+            try { document.getElementById('btn-skip').disabled = false; } catch(e) {}
             
             this.announce("ACTION! HOLD IT!", 'high');
             document.getElementById('sub-text').innerText = move.desc;
@@ -477,6 +480,69 @@ const App = {
 
         // increment combo for successful move
         this.incrementCombo();
+    },
+
+    skipMove: function() {
+        // Allow up to 3 skips per round to avoid abuse
+        const maxSkips = 3;
+        this.state.skipCount = this.state.skipCount || 0;
+        if (this.state.skipCount >= maxSkips) { this.announce('No skips remaining this round.', 'normal'); return; }
+
+        if (!this.state.currentCard) { this.announce('No active move to skip.', 'normal'); return; }
+
+        this.state.skipCount++;
+        this.announce(`Move skipped (${this.state.skipCount}/${maxSkips})`, 'normal');
+
+        // Clear current timers and UI timers
+        try { clearTimeout(this.state.timer); } catch(e) {}
+        try { this.stopCountdown(); } catch(e) {}
+        try { if (this.state.pinTimer) { clearInterval(this.state.pinTimer); this.state.pinTimer = null; } } catch(e) {}
+
+        // Reset timer bar and disable success temporarily
+        const bar = document.getElementById('timer-fill'); if (bar) { bar.style.transition = 'none'; bar.style.width = '100%'; }
+        document.getElementById('btn-success').disabled = true;
+
+        // Re-roll a new move for the same attacker (do not increment roundCount)
+        const att = this.state.attacker;
+        const oppHealth = att === 'wayne' ? this.state.p2Health : this.state.p1Health;
+        let deck;
+        if (oppHealth < (0.25 * this.state.maxHealth)) {
+            deck = DATA[att].finishers; this.state.isFinisher = true; document.body.style.background = "#200";
+        } else {
+            deck = [...DATA.general, ...DATA[att].moves]; this.state.isFinisher = false; document.body.style.background = "#000000";
+        }
+
+        const move = deck[Math.floor(Math.random() * deck.length)];
+        this.state.currentCard = move;
+
+        // Update UI with new move
+        const img = document.getElementById('main-image');
+        const self = this;
+        img.onload = function() { this.classList.add('main-visible'); this.onclick = function(e){ e.stopPropagation(); self.toggleImageZoom(); }; };
+        img.onerror = function() { this.onerror = null; this.src = `https://placehold.co/600x400/111/fff?text=${encodeURIComponent(move.name)}`; this.classList.add('main-visible'); this.onclick = function(e){ e.stopPropagation(); self.toggleImageZoom(); }; };
+        img.src = move.img;
+        img.style.display = 'block';
+
+        // Setup phase for the rerolled move (same as nextRound but without incrementing)
+        this.state.isSetupPhase = true;
+        document.getElementById('controls-area').style.opacity = '0.5';
+        try { document.getElementById('btn-skip').disabled = false; } catch(e) {}
+
+        const setupSec = this.state.setupDelaySeconds || 5;
+        const bar2 = document.getElementById('timer-fill');
+        bar2.style.transition = 'none'; bar2.style.width = '100%'; bar2.style.background = 'yellow'; void bar2.offsetWidth; bar2.style.transition = `width ${setupSec}s linear`; bar2.style.width = '0%';
+        this.startCountdown(setupSec);
+
+        this.state.timer = setTimeout(() => {
+            this.stopCountdown();
+            this.state.isSetupPhase = false;
+            document.getElementById('controls-area').style.opacity = '1';
+            document.getElementById('btn-success').disabled = false;
+            try { document.getElementById('btn-skip').disabled = false; } catch(e) {}
+            this.announce('ACTION! HOLD IT!', 'high');
+            document.getElementById('sub-text').innerText = move.desc;
+            const actionTime = this.state.isFinisher ? 15 : 45; this.startActionTimer(actionTime);
+        }, setupSec * 1000);
 
         if (this.state.isFinisher) {
             // Check Match Type logic
@@ -995,6 +1061,8 @@ const App = {
         // -------------------------
         
         document.getElementById('btn-success').disabled = false;
+        // Ensure skip is disabled/reset by default until a move is active
+        try { document.getElementById('btn-skip').disabled = true; } catch(e) {}
         document.getElementById('kickout-overlay').style.display = 'none';
         document.getElementById('strip-screen').style.display = 'none';
         

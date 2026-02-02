@@ -439,7 +439,8 @@ body {
     body.in-match.overlay-open #controls-area { display: none !important; }
     .btn-game { min-height: 56px; font-size: 1.05rem; }
     #btn-success { width: 100%; }
-    #btn-reversal, #btn-tapout { width: 100%; }
+    #btn-reversal, #btn-tapout, #btn-skip { width: 100%; }
+#btn-skip { background: linear-gradient(135deg,#ffd27a,#ffc066); color:#111; border-color: rgba(0,0,0,0.06); }
 
     /* Hide thin timer at bottom to reduce clutter on small screens */
     #timer-strip { display: none; }
