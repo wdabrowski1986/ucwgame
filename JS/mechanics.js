@@ -946,15 +946,28 @@ const App = {
         try { document.getElementById('sexfight-setup').style.display = 'none'; document.body.classList.remove('overlay-open'); } catch(e) {}
         const modeEl = document.querySelector('input[name="sexf-mode"]:checked'); const durEl = document.getElementById('sexfight-duration');
         const mode = modeEl ? modeEl.value : 'MOST'; const dur = durEl ? Math.max(10, parseInt(durEl.value, 10) || 60) : 60;
-        this.state.sexfight = { mode: mode, duration: dur, tally: { wayne:0, cindy:0 }, timestamps: { wayne:[], cindy:[] }, started: true, startTime: Date.now(), tiebreaker: false };
+        this.state.sexfight = { mode: mode, duration: dur, tally: { wayne:0, cindy:0 }, timestamps: { wayne:[], cindy:[] }, started: true, startTime: Date.now(), endTime: Date.now() + dur*1000, tiebreaker: false };
         // Show HUD & enable orgasm buttons
-        const hud = document.getElementById('sexfight-hud'); if (hud) { hud.style.display = 'block'; hud.innerText = `${mode} — Time ${dur}s — Wayne: 0 • Cindy: 0`; }
+        const hud = document.getElementById('sexfight-hud'); if (hud) { hud.style.display = 'block'; }
         try { document.getElementById('btn-orgasm-wayne').style.display = 'inline-block'; document.getElementById('btn-orgasm-cindy').style.display = 'inline-block'; } catch(e) {}
+        this.updateSexFightHUD();
         this.announce(`Sexfight started: ${mode}. ${dur} seconds. Go!`, 'high');
         // Start timer
         try { if (this.state._sexfTimer) clearTimeout(this.state._sexfTimer); } catch(e) {}
         this.state._sexfTimer = setTimeout(() => { this.endSexFight(); }, dur * 1000);
-        // show numeric countdown on countdown element
+        // show numeric countdown using a dedicated interval
+        try { if (this.state._sexfCountdownInterval) clearInterval(this.state._sexfCountdownInterval); } catch(e) {}
+        this.state._sexfCountdownInterval = setInterval(() => {
+            try {
+                if (!this.state.sexfight || !this.state.sexfight.endTime) return;
+                const rem = Math.max(0, Math.ceil((this.state.sexfight.endTime - Date.now()) / 1000));
+                const el = document.getElementById('sexfight-countdown'); if (el) el.innerText = rem + 's';
+                if (rem <= 0) {
+                    clearInterval(this.state._sexfCountdownInterval); this.state._sexfCountdownInterval = null;
+                }
+            } catch(e) { }
+        }, 250);
+        // show numeric countdown on standard countdown too
         try { this.startCountdown(dur); } catch(e) {}
     },
 
@@ -988,6 +1001,7 @@ const App = {
                     // Disable any timers and keep buttons active
                     try { if (this.state._sexfTimer) { clearTimeout(this.state._sexfTimer); this.state._sexfTimer = null; } } catch(e) {}
                     try { this.stopCountdown(); } catch(e) {}
+                    try { if (this.state._sexfCountdownInterval) { clearInterval(this.state._sexfCountdownInterval); this.state._sexfCountdownInterval = null; } } catch(e) {}
                     const hud = document.getElementById('sexfight-hud'); if (hud) { hud.innerText = `TIEBREAKER — Next orgasm wins (no time limit)`; hud.classList.add('tiebreaker-active'); }
                     return;
                 }
@@ -1021,6 +1035,7 @@ const App = {
         }
         // Cleanup UI
         try { const hudEl = document.getElementById('sexfight-hud'); if (hudEl) { hudEl.classList.remove('tiebreaker-active'); hudEl.style.display = 'none'; } document.getElementById('btn-orgasm-wayne').style.display = 'none'; document.getElementById('btn-orgasm-cindy').style.display = 'none'; } catch(e) {}
+        try { if (this.state._sexfCountdownInterval) { clearInterval(this.state._sexfCountdownInterval); this.state._sexfCountdownInterval = null; } } catch(e) {}
         this.state.sexfight = null;
         if (!resolvedWinner) {
             // Tie -> start sudden-death tiebreaker: next orgasm wins (no time limit)
