@@ -37,6 +37,8 @@ const App = {
         intensity: 'NORMAL',
         tapCount: 0,
         skipCount: 0,
+        // TWO_OF_THREE: seconds per gauntlet turn (default 10)
+        twoOfThreeRoundSeconds: 10,
         // Configurable per-round caps and thresholds
         maxSkipsPerRound: 3,
         tapThresholds: { medium: 3, big: 8 },
@@ -44,8 +46,16 @@ const App = {
         inSubmissionDuel: false,
         duelRefusals: 0,
         duelMaxRefusals: 3,
-        duelPhrase: null
+        duelPhrase: null,
+        // Count of pressurer exchanges (incremented each time pressurer flips)
+        duelExchangeCount: 0,
+        // Blindfold peek penalty (fraction of maxHealth) - small
+        peekPenaltyPercent: 0.04,
+        peeking: false,
+        // Player-defined stakes (strings describing what they'll lose/perform on loss)
+        stakes: { wayne: '', cindy: '' }
     },
+
 
     // Phrases used in Submission Duel
     submissionPhrases: [
@@ -55,6 +65,92 @@ const App = {
         "You're my master.",
         "I belong to you."
     ],
+
+    // --- SUDDEN DEATH HELPERS ---
+    populateSuddenDeathMoves: function() {
+        // Fill move selects with possible moves (general + each player's moves)
+        const wayneMoves = [...DATA.general, ...DATA.wayne.moves];
+        const cindyMoves = [...DATA.general, ...DATA.cindy.moves];
+        const wSel = document.getElementById('sd-move-wayne'); const cSel = document.getElementById('sd-move-cindy');
+        if (!wSel || !cSel) return;
+        wSel.innerHTML = ''; cSel.innerHTML = '';
+        wayneMoves.forEach(m => { const opt = document.createElement('option'); opt.value = m.name; opt.innerText = m.name; wSel.appendChild(opt); });
+        cindyMoves.forEach(m => { const opt = document.createElement('option'); opt.value = m.name; opt.innerText = m.name; cSel.appendChild(opt); });
+    },
+
+    startSuddenDeath: function() {
+        // Read selections and hide setup
+        const wSel = document.getElementById('sd-move-wayne'); const cSel = document.getElementById('sd-move-cindy');
+        if (!wSel || !cSel) { this.announce('Move selection missing.', 'normal'); return; }
+        const wName = wSel.value; const cName = cSel.value;
+        // Find move objects
+        const allMoves = DATA.general.concat(DATA.wayne.moves).concat(DATA.cindy.moves);
+        const wMove = allMoves.find(m => m.name === wName) || allMoves[0];
+        const cMove = allMoves.find(m => m.name === cName) || allMoves[0];
+        this.state.suddenMoves = { wayne: wMove, cindy: cMove };
+        document.getElementById('sudden-death-setup').style.display = 'none'; document.body.classList.remove('overlay-open');
+        this.announce('Sudden Death moves locked. Wayne will perform first.', 'high');
+        // Initialize tallies
+        this.state.suddenDeathTally = { wayne: 0, cindy: 0 };
+        // Begin first turn (Wayne first)
+        setTimeout(() => { this.runSuddenTurn('wayne'); }, 1200);
+    },
+
+    runSuddenTurn: function(actor) {
+        // actor performs their chosen move on opponent; opponent taps to escape and those taps count toward actor's tally
+        this.state.suddenActor = actor; this.state.inSuddenDeathAction = true;
+        const move = (this.state.suddenMoves && this.state.suddenMoves[actor]) ? this.state.suddenMoves[actor] : (DATA.general[0] || {name:'Unknown', desc:''});
+        const defender = (actor === 'wayne') ? 'cindy' : 'wayne';
+        document.getElementById('instruction-text').innerText = `${actor.toUpperCase()} performs: ${move.name}`;
+        document.getElementById('sub-text').innerText = `Defender (${defender.toUpperCase()}) tap to escape — taps recorded.`;
+        // Show current tally HUD
+        const hud = document.getElementById('sudden-hud'); if (hud) hud.style.display = 'block';
+        this.updateSuddenHUD();
+        // Disable normal kickout behavior; enable SUBMISSION +1 to be used as tap counter
+        try { document.getElementById('btn-success').disabled = false; } catch(e) {}
+        // Action time based on intensity mapping (SOFT 45, NORMAL 60, ROUGH 90)
+        const seconds = this.actionTimeForCurrentIntensity();
+        this.startActionTimer(seconds);
+        // When timer ends, callback will call endSuddenTurn via startActionTimer's timeout
+        // We set a small flag so addTap routes to tally
+    },
+
+    endSuddenTurn: function() {
+        // Called when the current sudden action times out
+        const actor = this.state.suddenActor;
+        this.state.inSuddenDeathAction = false; this.state.suddenActor = null;
+        // Hide HUD briefly
+        const hud = document.getElementById('sudden-hud'); if (hud) hud.style.display = 'none';
+        // Determine if we need to run the other actor's turn
+        if (!this.state._suddenSecondDone) {
+            // First turn just completed; run second
+            this.state._suddenSecondDone = true;
+            const next = (actor === 'wayne') ? 'cindy' : 'wayne';
+            this.announce(`${actor.toUpperCase()}'s turn complete. Now ${next.toUpperCase()} performs.`, 'normal');
+            setTimeout(() => { this.runSuddenTurn(next); }, 900);
+            return;
+        }
+        // Both turns done: evaluate winner
+        const w = this.state.suddenDeathTally.wayne || 0; const c = this.state.suddenDeathTally.cindy || 0;
+        if (w === c) {
+            this.announce(`Tie (${w} — ${c}). Sudden Death tie-breaker!`, 'high');
+            // Reset for another short tie-break: shorter action time
+            this.state._suddenSecondDone = false; this.state.suddenDeathTally = { wayne:0, cindy:0 };
+            setTimeout(() => { this.runSuddenTurn((Math.random() < 0.5) ? 'wayne' : 'cindy'); }, 1200);
+            return;
+        }
+        const winner = (w > c) ? 'wayne' : 'cindy'; const loser = (winner === 'wayne') ? 'cindy' : 'wayne';
+        this.announce(`Sudden Death winner: ${winner.toUpperCase()} (${w} — ${c}). Harsh punishment incoming.`, 'win');
+        // Apply BIG punishment to loser
+        this.applyPunishmentBySeverity('BIG', loser);
+        // Clean-up
+        this.state._suddenSecondDone = false; this.state.suddenDeathTally = null;
+    },
+
+    updateSuddenHUD: function() {
+        const hud = document.getElementById('sudden-hud'); if (!hud) return;
+        hud.innerText = `Sudden Death — Wayne: ${this.state.suddenDeathTally.wayne || 0}  •  Cindy: ${this.state.suddenDeathTally.cindy || 0}`;
+    },
 
     // --- ROUND & TAP HELPERS ---
     // Return action time seconds based on intensity mapping
@@ -79,10 +175,29 @@ const App = {
 
     addTap: function() {
         if (this.state.isSetupPhase) return; // cannot tap during setup
+        // If we're in Sudden Death action, this tap counts toward the current attacker's tally
+        if (this.state.inSuddenDeathAction && this.state.suddenActor) {
+            const attacker = this.state.suddenActor;
+            this.state.suddenDeathTally = this.state.suddenDeathTally || { wayne:0, cindy:0 };
+            this.state.suddenDeathTally[attacker] = (this.state.suddenDeathTally[attacker] || 0) + 1;
+            this.updateSuddenHUD();
+            this.vibrate([30], true);
+            return;
+        }
+        // Gauntlet taps: defender taps during actor's gauntlet move — count toward actor's tally
+        if (this.state.inGauntletAction && this.state.gauntletActor) {
+            const attacker = this.state.gauntletActor;
+            this.state.gauntletTally = this.state.gauntletTally || { wayne:0, cindy:0 };
+            this.state.gauntletTally[attacker] = (this.state.gauntletTally[attacker] || 0) + 1;
+            const hud = document.getElementById('sudden-hud'); if (hud) hud.innerText = `Gauntlet — Wayne: ${this.state.gauntletTally.wayne} • Cindy: ${this.state.gauntletTally.cindy}`;
+            this.vibrate([30], true);
+            return;
+        }
         this.state.tapCount = (this.state.tapCount || 0) + 1;
         const el = document.getElementById('tap-count'); if (el) el.innerText = this.state.tapCount;
         this.vibrate([40], true);
     },
+
 
     openRoundSummary: function() {
         // Stop timers and show summary
@@ -148,6 +263,33 @@ const App = {
         this.confirmRoundResult('quit');
     },
 
+    // --- PEEK (BLINDFOLD) ---
+    peek: function() {
+        if (this.state.stipulation !== 'BLINDFOLD') { this.announce('Peek is only available in Blindfold matches.', 'normal'); return; }
+        if (this.state.isSetupPhase) { this.announce('Cannot peek during setup.', 'normal'); return; }
+        if (this.state.peeking) return; // already peeking
+        this.state.peeking = true;
+        // Show image briefly
+        const img = document.getElementById('main-image');
+        const oldDisplay = img.style.display;
+        try { img.style.display = 'block'; } catch(e) {}
+        // Apply small self-penalty to attacker (much smaller than normal damage)
+        const penalty = Math.round((this.state.peekPenaltyPercent || 0.04) * this.state.maxHealth);
+        if (this.state.attacker === 'wayne') this.state.p1Health = Math.max(0, this.state.p1Health - penalty);
+        else this.state.p2Health = Math.max(0, this.state.p2Health - penalty);
+        this.updateHUD();
+        this.announce(`Peek used — ${penalty} HP penalty applied to ${this.state.attacker.toUpperCase()}.`, 'normal');
+        // Disable peek button while visible
+        try { const pb = document.getElementById('btn-peek'); if (pb) { pb.disabled = true; } } catch(e) {}
+        setTimeout(() => {
+            try { img.style.display = oldDisplay || 'none'; } catch(e) {}
+            try { const pb = document.getElementById('btn-peek'); if (pb) { pb.disabled = false; } } catch(e) {}
+            this.state.peeking = false;
+            // If penalty killed the player, check endgame
+            if (this.state.p1Health <= 0 || this.state.p2Health <= 0) { this.triggerEndGame(); }
+        }, 1400);
+    },
+
     // --- SUBMISSION DUEL HANDLERS ---
     startSubmissionDuel: function() {
         // Cancel timers and prepare duel
@@ -155,13 +297,17 @@ const App = {
         try { this.stopCountdown(); } catch(e) {}
         this.state.inSubmissionDuel = true;
         this.state.duelRefusals = 0;
+        this.state.duelExchangeCount = 0; // reset exchange counter
+        // Initial pressurer is current attacker
+        this.state.duelPressurer = this.state.attacker;
         const idx = Math.floor(Math.random() * this.submissionPhrases.length);
         this.state.duelPhrase = this.submissionPhrases[idx];
         // Update UI
         const el = document.getElementById('submission-duel'); if (el) el.style.display = 'flex';
-        const pEl = document.getElementById('submission-duel-phrase'); if (pEl) pEl.innerText = JSON.stringify(this.state.duelPhrase).replace(/"/g,'');
+        const pEl = document.getElementById('submission-duel-phrase'); if (pEl) pEl.innerText = this.state.duelPhrase;
         const dEl = document.getElementById('duel-refusals'); if (dEl) dEl.innerText = this.state.duelRefusals;
         const mEl = document.getElementById('duel-max'); if (mEl) mEl.innerText = this.state.duelMaxRefusals;
+        const pressEl = document.getElementById('duel-pressurer-name'); if (pressEl) pressEl.innerText = this.state.duelPressurer.toUpperCase();
         document.body.classList.add('overlay-open');
         this.announce('Submission Duel started! Pressure the defender to yield.', 'high');
     },
@@ -173,12 +319,134 @@ const App = {
         document.body.classList.remove('overlay-open');
     },
 
+    // --- TWO-OF-THREE (NO-HOLDS) HELPERS ---
+    showJudgeOverlay: function(presumedWinner) {
+        const el = document.getElementById('two-judge'); if (!el) return; el.style.display = 'flex';
+        document.body.classList.add('overlay-open');
+        const ctx = document.getElementById('judge-context'); if (ctx) ctx.innerText = `Presumed winner: ${presumedWinner.toUpperCase()}. Confirm or select Draw.`;
+    },
+
+    judgePick: function(choice) {
+        // hide overlay and process choice
+        try { document.getElementById('two-judge').style.display = 'none'; document.body.classList.remove('overlay-open'); } catch(e) {}
+        // Clear any provisional winner marker
+        this.state.pendingFallWinner = null;
+        if (choice === 'draw') {
+            this.announce('Fall marked as Draw.', 'normal');
+            // If match is tied after 3 rounds, start submission gauntlet
+            if (this.state.roundCount >= 3 && this.state.p1Falls === this.state.p2Falls) {
+                try { document.getElementById('submission-gauntlet').style.display = 'flex'; document.body.classList.add('overlay-open'); } catch(e) {}
+                return;
+            }
+            // otherwise, continue to next round
+            this.state.attacker = this.state.attacker === 'wayne' ? 'cindy' : 'wayne';
+            this.resetCombo();
+            setTimeout(() => this.nextRound(), 1200);
+            return;
+        }
+        // assign fall to chosen
+        if (choice === 'wayne') this.state.p1Falls++; if (choice === 'cindy') this.state.p2Falls++;
+        // clear any pending provisional marker
+        this.state.pendingFallWinner = null;
+        this.updateHUD();
+        // If someone has 2 falls, finish match
+        if (this.state.p1Falls >= 2 || this.state.p2Falls >= 2) {
+            const winner = (this.state.p1Falls >= 2) ? 'wayne' : 'cindy';
+            this.endMatchWithWinner(winner);
+            return;
+        }
+        // Otherwise reset health and continue
+        this.announce(`Fall awarded to ${choice.toUpperCase()}. Resetting for next fall.`, 'high');
+        this.state.p1Health = 100; this.state.p2Health = 100; this.updateHUD();
+        // Loser of fall starts next round
+        const loser = (choice === 'wayne') ? 'cindy' : 'wayne';
+        this.state.attacker = loser; this.resetCombo();
+        setTimeout(() => this.nextRound(), 1800);
+    },
+
+    endMatchWithWinner: function(winner) {
+        const loser = (winner === 'wayne') ? 'cindy' : 'wayne';
+        this.state.wins[winner]++;
+        localStorage.setItem('ubc_history', JSON.stringify(this.state.wins));
+        this.announce(`WINNER: ${winner.toUpperCase()}!`, 'win');
+        this.vibrate([300,100,300], true);
+        setTimeout(() => {
+            if (typeof document !== 'undefined' && document.body) document.body.classList.remove('in-match');
+            document.body.classList.add('overlay-open');
+            document.getElementById('winner-name').innerText = `${winner.toUpperCase()}`;
+            const ws = document.getElementById('winner-screen'); ws.style.display = 'flex'; ws.classList.add('show-belt');
+            if (this._autoPunishTimer) clearTimeout(this._autoPunishTimer);
+            this._autoPunishTimer = setTimeout(() => { this.openPunishmentSelection(); }, 5000);
+        }, 4000);
+    },
+
+    // --- SUBMISSION GAUNTLET ---
+    startSubmissionGauntlet: function() {
+        // small wrapper: pick a random mutual submission move and start gauntlet flow
+        const move = DATA.general[Math.floor(Math.random() * DATA.general.length)] || {name:'Submission', desc:''};
+        this.state.gauntletMove = move;
+        this.state.gauntletTally = { wayne:0, cindy:0 };
+        this.state._gauntletSecondDone = false;
+        document.getElementById('submission-gauntlet').style.display = 'none'; document.body.classList.remove('overlay-open');
+        this.announce(`Gauntlet move: ${move.name}. Wayne begins.`, 'high');
+        setTimeout(() => { this.runGauntletTurn('wayne'); }, 900);
+    },
+
+    runGauntletTurn: function(actor) {
+        // Custom timer flow for gauntlet (do not use standard startActionTimer which advances rounds)
+        this.state.gauntletActor = actor; this.state.inGauntletAction = true;
+        const move = this.state.gauntletMove; const defender = (actor === 'wayne') ? 'cindy' : 'wayne';
+        document.getElementById('instruction-text').innerText = `${actor.toUpperCase()} performs: ${move.name}`;
+        document.getElementById('sub-text').innerText = `Defender (${defender.toUpperCase()}) tap to escape — taps recorded.`;
+        const hud = document.getElementById('sudden-hud'); if (hud) { hud.style.display = 'block'; hud.innerText = `Gauntlet — Wayne: ${this.state.gauntletTally.wayne} • Cindy: ${this.state.gauntletTally.cindy}`; }
+        const seconds = this.state.twoOfThreeRoundSeconds || 10;
+
+        // Visual timer bar
+        const bar = document.getElementById('timer-fill');
+        bar.style.transition = 'none'; bar.style.width = '100%';
+        bar.style.background = 'var(--gold)'; void bar.offsetWidth; bar.style.transition = `width ${seconds}s linear`; bar.style.width = '0%';
+        // Numeric countdown
+        this.startCountdown(seconds);
+        // Use a dedicated timeout so we can call endGauntletTurn when time expires
+        try { if (this.state.timer) clearTimeout(this.state.timer); } catch(e) {}
+        this.state.timer = setTimeout(() => {
+            this.stopCountdown();
+            this.endGauntletTurn();
+        }, seconds * 1000);
+    },
+
+    endGauntletTurn: function() {
+        const actor = this.state.gauntletActor; this.state.inGauntletAction = false; this.state.gauntletActor = null;
+        if (!this.state._gauntletSecondDone) {
+            this.state._gauntletSecondDone = true; const next = (actor === 'wayne') ? 'cindy' : 'wayne'; this.announce(`${actor.toUpperCase()} complete. Now ${next.toUpperCase()} performs.`, 'normal'); setTimeout(()=>this.runGauntletTurn(next), 900); return;
+        }
+        // resolve
+        const w = this.state.gauntletTally.wayne || 0; const c = this.state.gauntletTally.cindy || 0;
+        if (w === c) { this.announce(`Gauntlet Tie (${w} — ${c}). Sudden Handshake — rematch!`, 'high'); this.state._gauntletSecondDone = false; this.state.gauntletTally = {wayne:0, cindy:0}; setTimeout(()=>this.runGauntletTurn((Math.random()<0.5)?'wayne':'cindy'),1200); return; }
+        const winner = (w>c)?'wayne':'cindy'; const loser = (winner==='wayne')?'cindy':'wayne';
+        // Hide gauntlet HUD and reset flags
+        const hud = document.getElementById('sudden-hud'); if (hud) { hud.style.display = 'none'; hud.innerText = ''; }
+        document.getElementById('instruction-text').innerText = '';
+        document.getElementById('sub-text').innerText = '';
+        this.announce(`Gauntlet winner: ${winner.toUpperCase()} — stakes apply!`, 'win');
+        this.applyPunishmentBySeverity('BIG', loser);
+        this.state._gauntletSecondDone = false; this.state.gauntletTally = null;
+    },
+
+    // --- ROUND & TAP HELPERS ---
+    // Return action time seconds based on intensity mapping
+
     duelSubmit: function() {
         // Defender submits (or confirms phrase) -> immediate BIG punishment
+        // Determine who submitted (defender = opposite of current pressurer)
+        const pressurer = this.state.duelPressurer || this.state.attacker;
+        const loser = (pressurer === 'wayne') ? 'cindy' : 'wayne';
         this.endSubmissionDuel();
-        this.announce('Submission accepted — BIG punishment incoming!', 'high');
-        this.applyPunishmentBySeverity('BIG');
+        this.announce(`${loser.toUpperCase()} submitted to ${pressurer.toUpperCase()} — BIG punishment incoming!`, 'high');
+        // Pass loser into punishment flow so UI and logic know who to punish
+        this.applyPunishmentBySeverity('BIG', loser);
     },
+
 
     duelSayPhrase: function() {
         // Prompt to confirm whether phrase was said as part of the duel
@@ -198,7 +466,15 @@ const App = {
             this.duelSubmit();
             return;
         }
-        this.announce('Refused — pressure continues. Re-rolling next submission move.', 'normal');
+        // Alternate pressurer (back-and-forth)
+        this.state.duelPressurer = (this.state.duelPressurer === 'wayne') ? 'cindy' : 'wayne';
+        // Make the duel pressurer the current attacker so rerolled moves come from them
+        this.state.attacker = this.state.duelPressurer;
+        const pressEl = document.getElementById('duel-pressurer-name'); if (pressEl) pressEl.innerText = this.state.duelPressurer.toUpperCase();
+        // Count this exchange (each flip counts); after a full back-and-forth (2 flips) remove clothing
+        this.state.duelExchangeCount = (this.state.duelExchangeCount || 0) + 1;
+        if (this.state.duelExchangeCount % 2 === 0) { try { this.performDuelExchangeClothingRemoval(); } catch(e){ console.warn('performDuelExchangeClothingRemoval failed', e); } }
+        this.announce('Refused — pressure switches sides. Re-rolling next submission move.', 'normal');
         this.rerollDuelMove();
     },
 
@@ -229,11 +505,37 @@ const App = {
         this.startCountdown(setupSec);
         try { clearTimeout(this.state.timer); } catch(e) {}
         this.state.timer = setTimeout(() => {
-            this.stopCountdown(); this.state.isSetupPhase = false; document.getElementById('controls-area').style.opacity = '1'; document.getElementById('btn-success').disabled = false; this.announce('Continue Submission Duel — action!', 'high'); document.getElementById('sub-text').innerText = move.desc; const actionTime = this.state.isFinisher ? 15 : 45; this.startActionTimer(actionTime);
+            this.stopCountdown(); this.state.isSetupPhase = false; document.getElementById('controls-area').style.opacity = '1'; document.getElementById('btn-success').disabled = false; this.announce('Continue Submission Duel — action!', 'high'); document.getElementById('sub-text').innerText = move.desc; const actionTime = this.state.isFinisher ? 15 : this.actionTimeForCurrentIntensity(); this.startActionTimer(actionTime);
         }, setupSec * 1000);
-    }
+    },
 
-    applyPunishmentBySeverity: function(sev) {
+    performDuelExchangeClothingRemoval: function() {
+        // Queue the players who still have clothing to remove and show the strip overlay for each in sequence
+        const queue = [];
+        ['wayne','cindy'].forEach(p => {
+            const layer = (p === 'wayne') ? this.state.p1Layer : this.state.p2Layer;
+            const item = (WARDROBE && WARDROBE[p]) ? WARDROBE[p][layer] : undefined;
+            if (typeof item !== 'undefined') queue.push(p);
+        });
+        if (!queue.length) { this.announce('No more clothing to remove.', 'normal'); return; }
+
+        // Prepare duel strip queue state
+        this.state.duelStripActive = true;
+        this.state.duelStripQueue = queue;
+        // Show the first player's strip overlay
+        const first = this.state.duelStripQueue[0];
+        this.state.duelStripCurrent = first;
+        const layer = (first === 'wayne') ? this.state.p1Layer : this.state.p2Layer;
+        const item = (WARDROBE && WARDROBE[first]) ? WARDROBE[first][layer] : 'clothing';
+        // Use a special subtitle for duel-mode removal
+        const subtitle = document.querySelector('#strip-screen .strip-subtitle');
+        try { if (subtitle) subtitle.innerText = 'DUEL REMOVAL — remove one item, then press DONE'; } catch(e) {}
+        this.triggerStripEvent(first, item);
+    },
+
+    applyPunishmentBySeverity: function(sev, loser) {
+        // Optionally record who the punishment will target (for UI and tracking)
+        if (loser) this.state.pendingPunishLoser = loser; else this.state.pendingPunishLoser = null;
         // Map severity to punishment categories (fallback to any allowed category)
         const order = (sev === 'BIG') ? ['domination','erotic','sensual','playful'] : (sev === 'MEDIUM') ? ['sensual','domination','erotic','playful'] : ['playful','sensual','domination','erotic'];
         let chosen = null;
@@ -292,6 +594,15 @@ const App = {
             const b = document.getElementById('tap-threshold-big'); if (b) b.value = this.state.tapThresholds.big;
             try { this.applyIntensitySettings(); } catch(e) {}
         }
+
+        // Load stakes if present
+        if (cfg.stakes) {
+            this.state.stakes = this.state.stakes || { wayne:'', cindy:'' };
+            this.state.stakes.wayne = (cfg.stakes.wayne) ? String(cfg.stakes.wayne).slice(0,240) : this.state.stakes.wayne;
+            this.state.stakes.cindy = (cfg.stakes.cindy) ? String(cfg.stakes.cindy).slice(0,240) : this.state.stakes.cindy;
+            const sw = document.getElementById('stake-wayne'); if (sw) sw.value = this.state.stakes.wayne;
+            const sc = document.getElementById('stake-cindy'); if (sc) sc.value = this.state.stakes.cindy;
+        }
     },
 
     saveSettings: function() {
@@ -307,6 +618,10 @@ const App = {
                 tapThresholds: {
                     medium: (document.getElementById('tap-threshold-medium') ? parseInt(document.getElementById('tap-threshold-medium').value, 10) : this.state.tapThresholds.medium),
                     big: (document.getElementById('tap-threshold-big') ? parseInt(document.getElementById('tap-threshold-big').value, 10) : this.state.tapThresholds.big)
+                },
+                stakes: {
+                    wayne: (document.getElementById('stake-wayne') ? (document.getElementById('stake-wayne').value || '') : (this.state.stakes ? this.state.stakes.wayne : '')),
+                    cindy: (document.getElementById('stake-cindy') ? (document.getElementById('stake-cindy').value || '') : (this.state.stakes ? this.state.stakes.cindy : ''))
                 }
             };
             localStorage.setItem('ubc_settings', JSON.stringify(cfg));
@@ -440,6 +755,12 @@ const App = {
             this.saveSettings(); try { this.applyIntensitySettings(); } catch(e){}
         }); }
 
+        // Wire stakes inputs
+        const stakeW = document.getElementById('stake-wayne');
+        const stakeC = document.getElementById('stake-cindy');
+        if (stakeW) { stakeW.addEventListener('input', (e) => { this.state.stakes = this.state.stakes || {}; this.state.stakes.wayne = e.target.value.slice(0,240); this.saveSettings(); }); }
+        if (stakeC) { stakeC.addEventListener('input', (e) => { this.state.stakes = this.state.stakes || {}; this.state.stakes.cindy = e.target.value.slice(0,240); this.saveSettings(); }); }
+
         // Wire long-press resume button on the safeword overlay to avoid accidental resume
         const resumeBtn = document.getElementById('btn-resume');
         if (resumeBtn) {
@@ -478,6 +799,13 @@ const App = {
         this.state.stipulation = randomKey;
         const config = STIPULATIONS[randomKey];
         
+        // Pick a referee (the Ref picks the stipulation)
+        const REFS = ['Ref Morgan','Ref Quinn','Ref Blake','Ref Taylor','Ref Casey'];
+        const ref = REFS[Math.floor(Math.random() * REFS.length)];
+        this.state.refName = ref;
+        const refEl = document.getElementById('ref-name'); if (refEl) refEl.innerText = `Referee: ${ref}`;
+        // Announce referee and match type for drama
+        this.announce(`Referee ${ref} selects ${config.name}. ${config.desc}`, 'high');
         document.getElementById('stipulation-banner').innerText = config.name;
         
         // 2. RESET STATE FOR NEW MATCH
@@ -490,6 +818,9 @@ const App = {
         if (this.state.stipulation === 'SUDDEN_DEATH') {
             const half = Math.round(this.state.maxHealth / 2);
             this.state.p1Health = half; this.state.p2Health = half;
+            // Disable healing for Sudden Death
+            this.state.pinHealPercent = 0;
+            this.state.sensualHealPercent = 0;
         }
 
         // Coin Toss
@@ -498,8 +829,13 @@ const App = {
         this.updateClothingUI();
         
         this.announce(`Match Type: ${config.name}. ${config.desc}`, 'high');
-        
-        setTimeout(() => this.nextRound(), 4000);
+
+        // If Sudden Death, show move selection modal before first round
+        if (this.state.stipulation === 'SUDDEN_DEATH') {
+            try { this.populateSuddenDeathMoves(); document.getElementById('sudden-death-setup').style.display = 'flex'; document.body.classList.add('overlay-open'); } catch(e){ console.warn('Failed to show Sudden Death setup', e); setTimeout(() => this.nextRound(), 4000); }
+        } else {
+            setTimeout(() => this.nextRound(), 4000);
+        }
     },
 
     // --- GAME LOOP ---
@@ -580,7 +916,15 @@ const App = {
         let prefix = "";
         if (this.state.stipulation === 'BLINDFOLD') prefix = "Attacker, Cover your eyes. ";
         
-        this.announce(`${prefix}${attackerName}, Get Ready... ${move.name}`, 'normal');
+        // Announce without revealing move name if blindfolded
+        if (this.state.stipulation === 'BLINDFOLD') {
+            this.announce(`${prefix}${attackerName}, Get Ready... (Blindfold)`, 'normal');
+            // Hide the image for blindfold rounds (attacker should not see it)
+            img.style.display = 'none';
+        } else {
+            this.announce(`${prefix}${attackerName}, Get Ready... ${move.name}`, 'normal');
+            img.style.display = 'block';
+        }
         document.getElementById('sub-text').innerText = "Get into position...";
         
         // Yellow Bar Animation (configurable)
@@ -600,9 +944,15 @@ const App = {
             document.getElementById('btn-success').disabled = false;
             // Enable skip once move is available
             try { document.getElementById('btn-skip').disabled = false; } catch(e) {}
-            
-            this.announce("ACTION! HOLD IT!", 'high');
-            document.getElementById('sub-text').innerText = move.desc;
+
+            // BLINDFOLD: hide description and enable PEEK button (small cost)
+            if (this.state.stipulation === 'BLINDFOLD') {
+                document.getElementById('sub-text').innerText = 'Blindfold active — attacker must close eyes. Use PEEK to view (small penalty).';
+                try { const pb = document.getElementById('btn-peek'); if (pb) { pb.style.display = 'inline-block'; pb.disabled = false; pb.innerText = `PEEK (-${Math.round(this.state.peekPenaltyPercent*100)}%)`; } } catch(e) {}
+            } else {
+                document.getElementById('sub-text').innerText = move.desc;
+                try { const pb = document.getElementById('btn-peek'); if (pb) { pb.style.display = 'none'; pb.disabled = true; } } catch(e) {}
+            }
             
             const actionTime = this.state.isFinisher ? 15 : 45; 
             this.startActionTimer(actionTime);
@@ -927,10 +1277,58 @@ const App = {
         document.body.classList.add('overlay-open');
         document.getElementById('strip-player-name').innerText = player.toUpperCase();
         document.getElementById('strip-item-name').innerText = item;
+        // If this is part of duel-driven removal, set subtitle accordingly
+        const subtitle = document.querySelector('#strip-screen .strip-subtitle');
+        if (this.state && this.state.duelStripActive) {
+            if (subtitle) subtitle.innerText = 'DUEL REMOVAL — remove one item, then press DONE';
+        } else {
+            if (subtitle) subtitle.innerText = 'WARDROBE MALFUNCTION';
+        }
         this.announce(`WARDROBE MALFUNCTION! ${player}, remove your ${item}!`, 'high');
     },
 
     confirmStrip: function() {
+        // If we're in a duel-driven clothing removal sequence, process queue items and continue the duel
+        if (this.state.duelStripActive) {
+            const player = this.state.duelStripCurrent;
+            if (player === 'wayne') this.state.p1Layer++; else this.state.p2Layer++;
+            this.updateClothingUI();
+
+            // Show transient confirmation and briefly disable Done button to avoid accidental double-press
+            const subtitle = document.querySelector('#strip-screen .strip-subtitle');
+            const doneBtn = document.querySelector('#strip-screen .btn-menu');
+            if (subtitle) { subtitle.classList.add('strip-confirm'); subtitle.innerText = 'Removed — continuing...'; }
+            if (doneBtn) { doneBtn.disabled = true; }
+
+            setTimeout(() => {
+                // advance queue
+                this.state.duelStripQueue = this.state.duelStripQueue || [];
+                this.state.duelStripQueue.shift();
+                if (this.state.duelStripQueue.length > 0) {
+                    // show next player's strip prompt
+                    const next = this.state.duelStripQueue[0];
+                    this.state.duelStripCurrent = next;
+                    const layer = (next === 'wayne') ? this.state.p1Layer : this.state.p2Layer;
+                    const item = (WARDROBE && WARDROBE[next]) ? WARDROBE[next][layer] : 'clothing';
+                    // restore subtitle
+                    if (subtitle) { subtitle.classList.remove('strip-confirm'); subtitle.innerText = 'DUEL REMOVAL — remove one item, then press DONE'; }
+                    this.triggerStripEvent(next, item);
+                    if (doneBtn) { doneBtn.disabled = false; }
+                    return;
+                }
+                // Finished duel strip sequence
+                this.state.duelStripActive = false; this.state.duelStripCurrent = null; this.state.duelStripQueue = null;
+                if (subtitle) { subtitle.classList.remove('strip-confirm'); subtitle.innerText = 'WARDROBE MALFUNCTION'; }
+                document.getElementById('strip-screen').style.display = 'none';
+                document.body.classList.remove('overlay-open');
+                this.announce('Both players removed one item — duel resumes!', 'normal');
+                // Continue duel by re-rolling a duel move
+                try { this.rerollDuelMove(); } catch(e) { console.warn('Failed to resume duel', e); }
+            }, 900);
+            return;
+        }
+
+        // Default behavior (non-duel strip)
         document.getElementById('strip-screen').style.display = 'none';
         // Remove overlay marker so controls can reappear
         document.body.classList.remove('overlay-open');
@@ -1116,22 +1514,13 @@ const App = {
         
         // 2 OUT OF 3 FALLS LOGIC
         if (this.state.stipulation === 'TWO_OF_THREE') {
-            if (winner === 'wayne') this.state.p1Falls++;
-            else this.state.p2Falls++;
+            // Instead of auto-awarding, present to the judges to confirm (Wayne/Cindy/Draw)
+            this.state.pendingFallWinner = winner; // hold for judge's confirmation
             this.updateHUD();
-            
-            // If neither has 2 wins yet, restart round
-            if (this.state.p1Falls < 2 && this.state.p2Falls < 2) {
-                this.announce(`Winner of this fall: ${winner.toUpperCase()}! Resetting!`, 'high');
-                this.state.p1Health = 100; this.state.p2Health = 100;
-                this.updateHUD();
-                
-                // Loser of the fall starts the next round
-                this.state.attacker = loser;
-                
-                setTimeout(() => { this.announce("Round 2... FIGHT!", 'high'); this.nextRound(); }, 4000);
-                return; 
-            }
+            this.announce(`Fall to ${winner.toUpperCase()} — awaiting judge confirmation.`, 'normal');
+            // Show the judge overlay and wait for App.judgePick(...) to be called by UI
+            try { this.showJudgeOverlay(winner); } catch(e) { console.warn('showJudgeOverlay failed', e); }
+            return;
         }
 
         // SAVE STATS
@@ -1185,6 +1574,12 @@ const App = {
             document.getElementById('punish-options').style.display = 'flex';
         }
 
+        // If we have a pending punish loser, show it
+        if (this.state.pendingPunishLoser) {
+            const who = this.state.pendingPunishLoser.toUpperCase();
+            document.getElementById('punish-msg').innerText = `Punishment will apply to: ${who}`;
+        }
+
         document.getElementById('punishment-screen').style.display = 'flex';
         // body.overlay-open remains set
     },
@@ -1199,6 +1594,19 @@ const App = {
             return;
         }
 
+        // If a stake exists for the loser, show that instead of random punishment
+        if (this.state.pendingPunishLoser && this.state.stakes && this.state.stakes[this.state.pendingPunishLoser] && this.state.stakes[this.state.pendingPunishLoser].trim().length) {
+            document.getElementById('punish-options').style.display = 'none';
+            document.getElementById('punish-result').style.display = 'block';
+            document.getElementById('punish-title').innerText = 'STAKE';
+            document.getElementById('punish-desc').innerText = this.state.stakes[this.state.pendingPunishLoser];
+            const who = this.state.pendingPunishLoser.toUpperCase();
+            const note = document.createElement('div'); note.style.marginTop = '8px'; note.style.color = '#ffd'; note.style.fontWeight = '700'; note.innerText = `For: ${who}`;
+            const parent = document.getElementById('punish-result'); if (parent) parent.appendChild(note);
+            this.state.pendingPunishLoser = null; // clear
+            return;
+        }
+
         document.getElementById('punish-options').style.display = 'none';
         const list = DATA.punishments[cat];
         const result = list[Math.floor(Math.random() * list.length)];
@@ -1210,6 +1618,14 @@ const App = {
         } else {
             document.getElementById('punish-desc').innerText = result.name + (result.duration ? ` (${result.duration}s)` : '');
         }
+        // Show who the punishment will target if available
+        if (this.state.pendingPunishLoser) {
+            const who = this.state.pendingPunishLoser.toUpperCase();
+            const note = document.createElement('div'); note.style.marginTop = '8px'; note.style.color = '#ffd'; note.style.fontWeight = '700'; note.innerText = `For: ${who}`;
+            const parent = document.getElementById('punish-result'); if (parent) parent.appendChild(note);
+        }
+        // Clear pending pointer (handled)
+        this.state.pendingPunishLoser = null;
     },
 
     // --- UI HELPERS ---
@@ -1316,6 +1732,8 @@ const App = {
         // -------------------------
         
         document.getElementById('btn-success').disabled = false;
+        // Hide/disable peek by default
+        try { const pb = document.getElementById('btn-peek'); if (pb) { pb.style.display = 'none'; pb.disabled = true; } } catch(e) {}
         // Ensure skip is disabled/reset by default until a move is active
         try { document.getElementById('btn-skip').disabled = true; } catch(e) {}
         try { this.updateSkipUI(); } catch(e) {}
