@@ -121,6 +121,10 @@ body {
 #advanced-settings .settings-row { margin-bottom: 12px; }
 #toggle-advanced { font-size: 0.9rem; padding: 8px 12px; border-radius: 8px; background: transparent; color: #ffd; border: 1px solid rgba(255,255,255,0.06); cursor: pointer; }
 #toggle-advanced:focus { outline: 2px solid rgba(212,175,55,0.4); box-shadow: 0 0 0 4px rgba(212,175,55,0.06); }
+#btn-reset-advanced { padding: 8px 14px; border-radius: 8px; background: transparent; color: #f88; border: 1px solid rgba(255,80,120,0.12); cursor: pointer; }
+#btn-reset-advanced:hover { background: rgba(255,80,120,0.04); }
+.small-note.muted { color: #999; font-size: 0.75rem; }
+
 
 
 /* Tooltip for small inline help icons */

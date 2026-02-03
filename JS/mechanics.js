@@ -1753,9 +1753,42 @@ const App = {
             const gauntEl = document.getElementById('gauntlet-seconds'); const skipsEl = document.getElementById('max-skips');
             const g = gauntEl ? (parseInt(gauntEl.value, 10) || this.state.twoOfThreeRoundSeconds) : this.state.twoOfThreeRoundSeconds || 10;
             const s = skipsEl ? (parseInt(skipsEl.value, 10) || this.state.maxSkipsPerRound) : this.state.maxSkipsPerRound || 3;
-            const base = `Gauntlet ${g}s • Skips ${s}`;
+            // Include tap thresholds and a very short stake summary
+            const tMedEl = document.getElementById('tap-threshold-medium'); const tBigEl = document.getElementById('tap-threshold-big');
+            const tm = tMedEl ? (parseInt(tMedEl.value, 10) || (this.state.tapThresholds ? this.state.tapThresholds.medium : 3)) : (this.state.tapThresholds ? this.state.tapThresholds.medium : 3);
+            const tb = tBigEl ? (parseInt(tBigEl.value, 10) || (this.state.tapThresholds ? this.state.tapThresholds.big : 8)) : (this.state.tapThresholds ? this.state.tapThresholds.big : 8);
+            const sw = document.getElementById('stake-wayne'); const sc = document.getElementById('stake-cindy');
+            const stakeParts = [];
+            if (sw && sw.value && sw.value.trim()) stakeParts.push(`W:${(sw.value.trim().slice(0,16))}${sw.value.trim().length>16? '…':''}`);
+            if (sc && sc.value && sc.value.trim()) stakeParts.push(`C:${(sc.value.trim().slice(0,16))}${sc.value.trim().length>16? '…':''}`);
+            const stakeSummary = stakeParts.length ? ` • Stake ${stakeParts.join(' / ')}` : '';
+            const base = `Gauntlet ${g}s • Skips ${s} • Taps ${tm}/${tb}${stakeSummary}`;
             if (this.state.advancedOpen) tog.innerText = `Hide Advanced ▴ — ${base}`; else tog.innerText = `Show Advanced ▾ — ${base}`;
         } catch(e) { /* ignore */ }
+    },
+
+    resetAdvancedSettings: function() {
+        if (!confirm('Reset advanced settings to defaults?')) return;
+        // Defaults
+        const defaults = { twoOfThreeRoundSeconds: 10, maxSkipsPerRound: 3, tapMedium: 3, tapBig: 8, stakes: { wayne: '', cindy: '' } };
+        try {
+            this.state.twoOfThreeRoundSeconds = defaults.twoOfThreeRoundSeconds;
+            this.state.maxSkipsPerRound = defaults.maxSkipsPerRound;
+            this.state.tapThresholds = this.state.tapThresholds || {};
+            this.state.tapThresholds.medium = defaults.tapMedium; this.state.tapThresholds.big = defaults.tapBig;
+            this.state.stakes = this.state.stakes || {}; this.state.stakes.wayne = ''; this.state.stakes.cindy = '';
+            // Update DOM
+            const ga = document.getElementById('gauntlet-seconds'); if (ga) ga.value = this.state.twoOfThreeRoundSeconds;
+            const ms = document.getElementById('max-skips'); if (ms) ms.value = this.state.maxSkipsPerRound;
+            const tm = document.getElementById('tap-threshold-medium'); if (tm) tm.value = this.state.tapThresholds.medium;
+            const tb = document.getElementById('tap-threshold-big'); if (tb) tb.value = this.state.tapThresholds.big;
+            const sw = document.getElementById('stake-wayne'); if (sw) sw.value = '';
+            const sc = document.getElementById('stake-cindy'); if (sc) sc.value = '';
+            // Persist and refresh
+            this.saveSettings(); try { this.updateSkipUI(); } catch(e) {}
+            this.updateAdvancedSummary();
+            this.announce('Advanced settings reset to defaults.', 'normal');
+        } catch(e) { console.warn('resetAdvancedSettings failed', e); }
     },
 
     updateClothingUI: function() {
