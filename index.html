@@ -5,62 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UCW: Goddess Edition</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div id="ritual-overlay">
-        <div class="ritual-content">
-            <h1 id="ritual-title">THE GODDESS RITUAL</h1>
-            <p id="ritual-instruction">Wayne, provide the 'Offering' (60s Massage) to begin.</p>
-            <div id="ritual-steps">
-                <span id="step-1" class="step">⚖️ Offering</span>
-                <span id="step-2" class="step">👑 Mark</span>
-                <span id="step-3" class="step">💋 Seal</span>
+<body class="tv-arena">
+
+    <div id="ritual-overlay" class="overlay">
+        <div class="content">
+            <h1 class="glow-text">THE GODDESS RITUAL</h1>
+            <p id="ritual-text">Step 1: Wayne provides the 'Offering' (60s Foot Massage).</p>
+            <button class="btn-remote" onclick="advanceRitual()">TRIBUTE PERFORMED</button>
+        </div>
+    </div>
+
+    <div id="selection-overlay" class="overlay hidden">
+        <div class="content">
+            <h1>LOCK IN YOUR FINISHERS</h1>
+            <div class="selection-grid">
+                <div class="pick-box" id="p1-pick">WAYNE: <span id="w-choice">?</span></div>
+                <div class="pick-box" id="p2-pick">CINDY: <span id="c-choice">?</span></div>
             </div>
-            <button id="next-ritual-btn" onclick="advanceRitual()">PERFORM TRIBUTE</button>
-            <button id="start-match-btn" class="hidden" onclick="startMatch()">BEGIN BATTLE</button>
+            <div id="selection-menu"></div>
         </div>
     </div>
 
     <div id="arena-hud" class="hidden">
-        <div class="stats-container">
-            <div class="player-block" id="wayne-block">
-                <h3>WAYNE <span id="stun-icon" class="hidden">👑</span></h3>
-                <div class="bar-bg"><div id="hp-wayne" class="hp-bar"></div></div>
-                <div class="bar-bg"><div id="st-wayne" class="st-bar"></div></div>
-                <div class="layer-dots" id="layers-wayne"></div>
+        <div class="stats-bar">
+            <div class="player-hud" id="hud-wayne">
+                <h2>WAYNE <span id="stun-badge" class="hidden">👑</span></h2>
+                <div class="bar"><div id="hp-w" class="hp-fill"></div></div>
+                <div class="bar"><div id="st-w" class="st-fill"></div></div>
             </div>
-            <div class="player-block" id="cindy-block">
-                <h3>GODDESS</h3>
-                <div class="bar-bg"><div id="hp-cindy" class="hp-bar"></div></div>
-                <div class="bar-bg"><div id="st-cindy" class="st-bar"></div></div>
-                <div class="layer-dots" id="layers-cindy"></div>
+            <div class="player-hud" id="hud-cindy">
+                <h2>CINDY</h2>
+                <div class="bar"><div id="hp-c" class="hp-fill"></div></div>
+                <div class="bar"><div id="st-c" class="st-fill"></div></div>
             </div>
         </div>
-        <div id="move-menu"></div>
+        <div id="move-display" class="hidden">
+            <h1 id="active-move-name"></h1>
+            <img id="move-image" src="" alt="">
+            <div id="timer-display" class="hidden">15</div>
+            <p id="active-move-desc"></p>
+            <div id="challenge-btns" class="hidden">
+                <button onclick="resolveChallenge('Wayne')">Wayne Escaped</button>
+                <button onclick="resolveChallenge('Cindy')">Cindy Won</button>
+            </div>
+        </div>
+        <div id="remote-menu"></div>
     </div>
 
-    <div id="instruction-overlay" class="hidden" onclick="closeInstruction()">
-        <div class="instruction-content">
-            <h1 id="move-name">MOVE</h1>
-            <div id="challenge-timer" class="hidden">15</div>
-            <p id="move-desc">Instruction text...</p>
-            <div id="res-btns" class="hidden">
-                <button class="res-btn" onclick="resolveChallenge('Wayne', event)">WAYNE WON</button>
-                <button class="res-btn" onclick="resolveChallenge('Cindy', event)">CINDY WON</button>
-            </div>
-            <div class="tap-prompt">TAP ANYWHERE TO CONTINUE</div>
+    <div id="victory-layer" class="overlay hidden">
+        <div class="ko-container">
+            <h1 id="ko-text">K.O.</h1>
+            <h2 id="victory-banner">THE GODDESS REIGNS</h2>
+            <div id="speech-menu" class="hidden"></div>
+            <div id="speech-display" class="hidden"></div>
+            <button id="btn-credits" class="hidden" onclick="rollCredits()">VIEW HIGHLIGHTS</button>
         </div>
     </div>
 
-    <div id="summary-overlay" class="hidden">
-        <div id="credits-container">
-            <h1 class="credits-header">MATCH HIGHLIGHTS</h1>
-            <div id="credits-roll"></div>
-            <div class="credits-footer">
-                <h2 id="final-winner">THE GODDESS REIGNS</h2>
-                <button onclick="location.reload()">NEW RITUAL</button>
-            </div>
-        </div>
+    <div id="credits-overlay" class="overlay hidden">
+        <div id="credits-roll"></div>
     </div>
 
     <script src="moves.js"></script>
