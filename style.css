@@ -136,7 +136,9 @@ body {
 .btn-orgasm { padding: 12px 14px; border-radius: 8px; color: #fff; font-weight:800; }
 #btn-orgasm-wayne { background: linear-gradient(135deg, #00aaff, #0044aa); }
 #btn-orgasm-cindy { background: linear-gradient(135deg, #ff2a8a, #b0003f); }
-#sexfight-hud { font-weight: 700; font-size: 1rem; }
+#sexfight-hud { font-weight: 700; font-size: 1rem; transition: box-shadow 0.2s ease, transform 0.18s ease; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); background: rgba(40,10,20,0.6); }
+#sexfight-hud.tiebreaker-active { animation: tiebreakerPulse 1s infinite; box-shadow: 0 0 30px rgba(255,80,140,0.26); border-color: rgba(255,80,140,0.8); transform: scale(1.02); }
+@keyframes tiebreakerPulse { 0% { box-shadow: 0 0 8px rgba(255,80,140,0.12); } 50% { box-shadow: 0 0 30px rgba(255,80,140,0.28); } 100% { box-shadow: 0 0 8px rgba(255,80,140,0.12); } }
 
 
 

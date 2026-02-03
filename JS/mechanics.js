@@ -988,7 +988,7 @@ const App = {
                     // Disable any timers and keep buttons active
                     try { if (this.state._sexfTimer) { clearTimeout(this.state._sexfTimer); this.state._sexfTimer = null; } } catch(e) {}
                     try { this.stopCountdown(); } catch(e) {}
-                    const hud = document.getElementById('sexfight-hud'); if (hud) hud.innerText = `TIEBREAKER — Next orgasm wins (no time limit)`;
+                    const hud = document.getElementById('sexfight-hud'); if (hud) { hud.innerText = `TIEBREAKER — Next orgasm wins (no time limit)`; hud.classList.add('tiebreaker-active'); }
                     return;
                 }
                 const winner = (wLast > cLast) ? 'wayne' : 'cindy'; this.endSexFight(winner); return;
@@ -1020,7 +1020,7 @@ const App = {
             }
         }
         // Cleanup UI
-        try { document.getElementById('sexfight-hud').style.display = 'none'; document.getElementById('btn-orgasm-wayne').style.display = 'none'; document.getElementById('btn-orgasm-cindy').style.display = 'none'; } catch(e) {}
+        try { const hudEl = document.getElementById('sexfight-hud'); if (hudEl) { hudEl.classList.remove('tiebreaker-active'); hudEl.style.display = 'none'; } document.getElementById('btn-orgasm-wayne').style.display = 'none'; document.getElementById('btn-orgasm-cindy').style.display = 'none'; } catch(e) {}
         this.state.sexfight = null;
         if (!resolvedWinner) {
             // Tie -> start sudden-death tiebreaker: next orgasm wins (no time limit)
@@ -1030,13 +1030,14 @@ const App = {
                 // Ensure no active timers
                 try { if (this.state._sexfTimer) { clearTimeout(this.state._sexfTimer); this.state._sexfTimer = null; } } catch(e) {}
                 try { this.stopCountdown(); } catch(e) {}
-                try { const hud = document.getElementById('sexfight-hud'); if (hud) hud.innerText = `TIEBREAKER — Next orgasm wins (no time limit)`; } catch(e) {}
+                try { const hud = document.getElementById('sexfight-hud'); if (hud) { hud.innerText = `TIEBREAKER — Next orgasm wins (no time limit)`; hud.classList.add('tiebreaker-active'); } } catch(e) {}
                 // Keep orgasm buttons visible and wait
                 try { document.getElementById('btn-orgasm-wayne').style.display = 'inline-block'; document.getElementById('btn-orgasm-cindy').style.display = 'inline-block'; } catch(e) {}
                 return;
             }
             this.announce('Sexfight ended in a draw.', 'normal'); return;
         }
+        try { const hudEl = document.getElementById('sexfight-hud'); if (hudEl) hudEl.classList.remove('tiebreaker-active'); } catch(e) {}
         this.announce(`Sexfight winner: ${resolvedWinner.toUpperCase()}! Stakes apply.`, 'win');
         const loser = (resolvedWinner === 'wayne') ? 'cindy' : 'wayne';
         // Apply BIG punishment to loser and end match
