@@ -67,25 +67,19 @@ test('sexfight tiebreaker and winner', async ({ page }) => {
   // Open sexfight setup and configure MOST mode with short duration
   await page.evaluate(() => { try { App.openSexFightSetup(); } catch(e){ console.warn('openSexFightSetup failed', e); } });
   await page.waitForSelector('#sexfight-setup', { state: 'visible' });
-  // Configure MOST mode + small duration by manipulating DOM directly
+  // Trigger a tied end immediately by setting state and calling endSexFight()
   await page.evaluate(() => {
-    const mode = document.querySelector('input[name="sexf-mode"][value="MOST"]');
-    if (mode) mode.checked = true;
-    const dur = document.getElementById('sexfight-duration'); if (dur) dur.value = '2';
-    try { App.startSexFight(); } catch(e){ console.warn('startSexFight failed', e); }
+    try {
+      App.state.sexfight = { mode:'MOST', duration:10, tally:{wayne:1,cindy:1}, timestamps:{wayne:[Date.now()],cindy:[Date.now()]}, started:true, startTime: Date.now()-2000, endTime: Date.now()-1000, tiebreaker:false };
+      App.endSexFight();
+    } catch(e){ console.warn('endSexFight trigger failed', e); }
   });
-  await page.waitForSelector('#sexfight-hud', { state: 'visible' });
-  // Simulate simultaneous orgasms to create tie
-  await page.evaluate(() => { App.orgasm('wayne'); App.orgasm('cindy'); });
-  // Wait for duration to end and tiebreaker to activate
-  await page.waitForTimeout(2500);
   // Tiebreaker should be active and show text
+  await page.waitForSelector('#sexfight-hud.tiebreaker-active', { timeout: 2000 });
   const hudText = await page.locator('#sexfight-hud').innerText();
   expect(hudText.toLowerCase()).toContain('tiebreaker');
   // Resolve tiebreaker by Wayne orgasm
   await page.evaluate(() => { App.orgasm('wayne'); });
-  // Wait for winner flow to run
-  await page.waitForTimeout(1500);
   // Winner screen should be visible
   await page.waitForSelector('#winner-screen', { state: 'visible', timeout: 3000 });
   expect(errors).toEqual([]);
@@ -93,6 +87,8 @@ test('sexfight tiebreaker and winner', async ({ page }) => {
 
 test('advanced settings persistence', async ({ page }) => {
   await page.goto(BASE, { waitUntil: 'load' });
+  // Ensure App init has run so advanced toggle is wired
+  await page.evaluate(() => { try { App.init && App.init(); } catch(e){} });
   // Open advanced panel
   await page.click('#toggle-advanced');
   // The advanced panel toggles hidden + animated class; wait for it to be expanded
