@@ -40,7 +40,7 @@
             <span id="break-length-val">8s</span>
         </div>
 
-        <button class="btn-menu" onclick="App.init()">START MATCH</button>
+        <button class="btn-menu" onclick="safeStart()">START MATCH</button>
         <button onclick="App.resetData()" class="btn-reset">Reset History</button>
         <div class="settings-row" style="margin-top:10px;">
             <label for="match-intensity">Match Intensity</label>
@@ -205,6 +205,8 @@
                 // If a required script is missing or reported an error, disable start
                 if (!status || status === 'error') { disabled = true; break; }
             }
+            // Also ensure App.init is present before enabling
+            if (!window.App || typeof App.init !== 'function') disabled = true;
             startBtn.disabled = disabled;
             console.info('Start button enabled:', !disabled);
         }
@@ -224,6 +226,20 @@
                 setTimeout(updateStartButton, 50);
             }catch(e){ console.warn('Script record failed', e); }
         }
+        // Also expose a safe-start wrapper to capture errors and show them on the start screen
+        window.safeStart = function(){
+            const errEl = document.getElementById('load-error');
+            try {
+                if (!window.App || typeof App.init !== 'function') throw new Error('App not ready');
+                errEl.style.display = 'none';
+                App.init();
+            } catch(err) {
+                console.error('Start failed', err);
+                if (errEl) { errEl.style.display = 'block'; errEl.innerText = 'Start failed: ' + (err && err.message ? err.message : 'unknown error') + '. Check console for details.'; }
+                return;
+            }
+        };
+
         // Run an initial check in case scripts already reported
         setTimeout(updateStartButton, 100);
     </script>
