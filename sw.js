@@ -77,8 +77,13 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate' || (req.headers.get('accept') && req.headers.get('accept').includes('text/html'))) {
     event.respondWith(
       fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+        // Only cache successful navigation responses (status 200) and same-origin/basic responses
+        if (res && res.ok && (res.type === 'basic' || res.type === 'cors')) {
+          try {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          } catch(e) { console.warn('Failed to cache navigation response', e); }
+        }
         return res;
       }).catch(() => caches.match('index.html'))
     );
@@ -89,8 +94,13 @@ self.addEventListener('fetch', (event) => {
   if (req.destination === 'image') {
     event.respondWith(
       caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-        const rcopy = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, rcopy));
+        // Only cache successful images; opaque responses (cross-origin) may be ok to cache too
+        if (res && (res.ok || res.type === 'opaque')) {
+          try {
+            const rcopy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, rcopy));
+          } catch(e) { console.warn('Failed to cache image', e); }
+        }
         return res;
       }).catch(() => svgPlaceholder('Image unavailable')))
     );
@@ -100,9 +110,11 @@ self.addEventListener('fetch', (event) => {
   // Other requests -> cache-first then network
   event.respondWith(
     caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-      try { caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone())); } catch(e){}
+      if (res && res.ok && (res.type === 'basic' || res.type === 'cors' || res.type === 'opaque')) {
+        try { const copy = res.clone(); caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)); } catch(e) { console.warn('Failed to cache fetch response', e); }
+      }
       return res;
-    }))
+    }).catch(() => { /* network error */ }))
   );
 });
 
