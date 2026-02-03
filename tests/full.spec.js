@@ -4,7 +4,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const PORT = 8080;
+const WORKER_INDEX = process.env.PLAYWRIGHT_WORKER_INDEX ? parseInt(process.env.PLAYWRIGHT_WORKER_INDEX, 10) : 0;
+const PORT = 8080 + WORKER_INDEX;
 const BASE = `http://127.0.0.1:${PORT}`;
 let server;
 
