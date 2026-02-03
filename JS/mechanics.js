@@ -107,8 +107,6 @@ const App = {
         // Show current tally HUD
         const hud = document.getElementById('sudden-hud'); if (hud) hud.style.display = 'block';
         this.updateSuddenHUD();
-        // Disable normal kickout behavior; enable SUBMISSION +1 to be used as tap counter
-        try { document.getElementById('btn-success').disabled = false; } catch(e) {}
         // Action time based on intensity mapping (SOFT 45, NORMAL 60, ROUGH 90)
         const seconds = this.actionTimeForCurrentIntensity();
         this.startActionTimer(seconds);
@@ -506,7 +504,7 @@ const App = {
         this.startCountdown(setupSec);
         try { clearTimeout(this.state.timer); } catch(e) {}
         this.state.timer = setTimeout(() => {
-            this.stopCountdown(); this.state.isSetupPhase = false; document.getElementById('controls-area').style.opacity = '1'; document.getElementById('btn-success').disabled = false; this.announce('Continue Submission Duel — action!', 'high'); document.getElementById('sub-text').innerText = move.desc; const actionTime = this.state.isFinisher ? 15 : this.actionTimeForCurrentIntensity(); this.startActionTimer(actionTime);
+            this.stopCountdown(); this.state.isSetupPhase = false; document.getElementById('controls-area').style.opacity = '1'; this.announce('Continue Submission Duel — action!', 'high'); document.getElementById('sub-text').innerText = move.desc; const actionTime = this.state.isFinisher ? 15 : this.actionTimeForCurrentIntensity(); this.startActionTimer(actionTime);
         }, setupSec * 1000);
     },
 
@@ -1172,7 +1170,6 @@ const App = {
         // --- SETUP PHASE ---
         this.state.isSetupPhase = true;
         document.getElementById('controls-area').style.opacity = '0.5';
-        document.getElementById('btn-success').disabled = true;
         // Clear any pending hide timers so the upcoming image stays visible
         if (this.state.imageHideTimer) { clearTimeout(this.state.imageHideTimer); this.state.imageHideTimer = null; }
         
@@ -1205,7 +1202,6 @@ const App = {
             this.stopCountdown();
             this.state.isSetupPhase = false;
             document.getElementById('controls-area').style.opacity = '1';
-            document.getElementById('btn-success').disabled = false;
             // Enable skip once move is available
             try { document.getElementById('btn-skip').disabled = false; } catch(e) {}
 
@@ -1367,9 +1363,8 @@ const App = {
         try { this.stopCountdown(); } catch(e) {}
         try { if (this.state.pinTimer) { clearInterval(this.state.pinTimer); this.state.pinTimer = null; } } catch(e) {}
 
-        // Reset timer bar and disable success temporarily
+        // Reset timer bar temporarily
         const bar = document.getElementById('timer-fill'); if (bar) { bar.style.transition = 'none'; bar.style.width = '100%'; }
-        document.getElementById('btn-success').disabled = true;
 
         // Re-roll a new move for the same attacker (do not increment roundCount)
         const att = this.state.attacker;
@@ -1406,7 +1401,6 @@ const App = {
             this.stopCountdown();
             this.state.isSetupPhase = false;
             document.getElementById('controls-area').style.opacity = '1';
-            document.getElementById('btn-success').disabled = false;
             try { document.getElementById('btn-skip').disabled = false; } catch(e) {}
             this.announce('ACTION! HOLD IT!', 'high');
             document.getElementById('sub-text').innerText = move.desc;
@@ -2046,10 +2040,8 @@ const App = {
         this.state.imageHideTimer = setTimeout(() => { _img.style.display = 'none'; this.state.imageHideTimer = null; }, 400);
         
         // --- BUTTON TEXT RESET ---
-        document.getElementById('btn-success').innerText = "SUBMITTED";
+        // (removed legacy submit button)
         // -------------------------
-        
-        document.getElementById('btn-success').disabled = false;
         // Hide/disable peek by default
         try { const pb = document.getElementById('btn-peek'); if (pb) { pb.style.display = 'none'; pb.disabled = true; } } catch(e) {}
         // Ensure skip is disabled/reset by default until a move is active
