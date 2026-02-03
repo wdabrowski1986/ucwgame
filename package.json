@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "generate-sw-assets": "node tools/generate_sw_assets.js",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "git config core.hooksPath .githooks || true",
+    "test": "playwright test --reporter=list"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.1"
   }
 }
