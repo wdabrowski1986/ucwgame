@@ -350,14 +350,7 @@ body {
 
 .btn-game:active { transform: scale(0.96); background: rgba(255,255,255,0.1); }
 
-/* Success Button (Green Glow) */
-#btn-success { 
-    width: 100%; flex-grow: 2; 
-    border-color: rgba(46, 204, 113, 0.4); 
-    color: #2ecc71; 
-    text-shadow: 0 0 10px rgba(46,204,113,0.3); 
-}
-#btn-success:active { background: rgba(46, 204, 113, 0.1); }
+
 
 /* Reversal Button (Red Glow) */
 #btn-reversal { 
@@ -485,7 +478,7 @@ body {
     /* Keep standard start-screen behavior when overlay is not open but match hasn't started */
     body.in-match.overlay-open #controls-area { display: none !important; }
     .btn-game { min-height: 56px; font-size: 1.05rem; }
-    #btn-success { width: 100%; }
+
     #btn-reversal, #btn-tapout, #btn-skip, #btn-addtap, #btn-endround, #btn-quit-round { width: 100%; }
 #btn-skip { background: linear-gradient(135deg,#ffd27a,#ffc066); color:#111; border-color: rgba(0,0,0,0.06); }
 #btn-addtap { background: linear-gradient(135deg,#ff6b6b,#ff3b30); color:#fff; }
