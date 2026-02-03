@@ -1,49 +1,46 @@
-// js/moves.js
-const DATA = {
-    general: [
-        { name: "Domination Mount", desc: "Straddle the chest. Pin the wrists. Make them beg for their next breath.", img: "images/full-mount-control.png" },
-        { name: "Possessive Body Lock", desc: "Wrap legs tight around waist. Squeeze until heart rates synchronize.", img: "images/body-lock.png" },
-        { name: "The Bulldozer", desc: "Drive shoulder into chest, pin them flat. Total impact.", img: "images/the-bulldozer.png" },
-        { name: "69 Lockdown", desc: "Pin their arms with thighs. Give them a view they can't touch. Mutual torture.", img: "images/69-Pin.png" }, // NOTE: filename case must match the images folder exactly (GitHub Pages is case-sensitive)
-        { name: "Grapevine Exposure", desc: "Weave legs inside theirs. Spread them wide open. They are yours to look at.", img: "images/grapevine-hold.png" },
-        { name: "The Display", desc: "Sit on chest facing feet. Pin the legs. You are the only thing they can see.", img: "images/the-display.png" }
-    ],
-    cindy: {
-        moves: [
-            { name: "Amazon Straddle", desc: "The view from the top. Sit high on his chest, pinning arms with shins.", img: "images/amazon-straddle.png" },
-            { name: "Sole Worship", desc: "Press your sole to his chin. He stays there until he kisses the arch.", img: "images/sole-priority.png" },
-            { name: "Suffocation by Curves", desc: "Push his face deep into your chest. Let him struggle for air in paradise.", img: "images/breast-smother.png" },
-            { name: "Goddess Scissors", desc: "Wrap thighs around his neck. Squeeze slowly. Watch his eyes flutter.", img: "images/goddess-scissors.png" },
-            { name: "Ball Breaker", desc: "Grip him firmly. A slow, rhythmic pulse to remind him who owns him.", type: "pulse", img: "images/ball-breaker.png" },
-            { name: "Queen's Throne", desc: "Full weight face sit. Smother him completely until he taps in desperation.", img: "images/queens-throne.png" }
-        ],
-        finishers: [
-            { name: "THE MATRIARCH", desc: "FINISHER! High mount. Smother his face with your chest until he surrenders completely.", img: "images/the-matriarch.png" },
-            { name: "THE BLACK WIDOW", desc: "FINISHER! Legs around neck. Squeeze with devastating force. Feel him fade.", img: "images/the-black-widow.png" },
-            { name: "ABSOLUTE ZERO", desc: "FINISHER! Full weight face sit. He cannot see, cannot breathe, can only submit.", img: "images/absolute-zero.png" },
-            { name: "THE VENUS TRAP", desc: "FINISHER! Wrap your entire body around his head. Total engulfment.", img: "images/the-venus-trap.png" }
-        ]
-    },
-    wayne: {
-        moves: [
-            { name: "The Stockade", desc: "Lock wrists above her head. She is helpless and at your mercy.", img: "images/the-stockade.png" },
-            { name: "Thigh Spread Pin", desc: "Force her thighs wide apart and pin them with your legs. Total exposure.", img: "images/thigh-spread-pin.png" },
-            { name: "The Lockdown", desc: "Complete immobilization. Not a single part of her moves without permission.", img: "images/the-lockdown.png" },
-            { name: "Vice Grip", desc: "Squeeze her breasts firmly together. Remind her who they belong to.", img: "images/vice-grip.png" },
-            { name: "The Crucifix", desc: "Pin her arms using only your legs. Your hands are free to torment her torso.", img: "images/the-crucifix.png" },
-            { name: "Jaw Clamp", desc: "Grip her jaw firmly. Force your kisses on her. Make her submit breathless.", img: "images/jaw-clamp.png" }
-        ],
-        finishers: [
-            { name: "THE MONOLITH", desc: "FINISHER! Lay your full weight flat on top. Spread wide. She cannot move an inch.", img: "images/the-monolith.png" },
-            { name: "THE ANACONDA", desc: "FINISHER! Wrap from the side. Crush the air from her lungs slowly.", img: "images/the-anaconda.png" },
-            { name: "THE PILLAGER", desc: "FINISHER! Pin wrists, force legs, and destroy her torso until she cries out.", img: "images/the-pillager.png" },
-            { name: "THE CRUSHER", desc: "FINISHER! Full weight body pin with intense grinding. Constriction and pressure.", img: "images/the-crusher.png" }
-        ]
-    },
-    sensual: [
-        { name: "Deep Kiss", desc: "Stop everything. Kiss deeply and passionately for 60 seconds. No hands.", timer: 60 },
-        { name: "The Tease", desc: "Trace your fingers along lips, neck, and chest. They must stay perfectly still.", timer: 45 },
-        { name: "Body Worship", desc: "Slowly kiss and worship your opponent's body. Take time to appreciate the prize.", timer: 45 },
-        { name: "Heartbeat Check", desc: "Lay your head on their chest. Listen to their racing heart for one intimate minute.", timer: 60 }
-    ]
-};
+const moves = [
+    // --- GENERAL MOVES (Available to Both) ---
+    { name: "Domination Mount", attacker: null, type: "physical", damage: 20, staminaCost: 15, accuracy: 85, img: "images/full-mount-control.png", instruction: "Straddle the chest. Pin the wrists. Make them beg for their next breath." },
+    { name: "Possessive Body Lock", attacker: null, type: "challenge", damage: 25, staminaCost: 20, accuracy: 80, timeLimit: 15, img: "images/body-lock.png", instruction: "Wrap legs tight around waist. Squeeze until heart rates synchronize." },
+    { name: "The Bulldozer", attacker: null, type: "strike", damage: 15, staminaCost: 10, accuracy: 90, img: "images/the-bulldozer.png", instruction: "Drive shoulder into chest, pin them flat. Total impact." },
+    { name: "69 Lockdown", attacker: null, type: "physical", damage: 30, staminaCost: 25, accuracy: 75, img: "images/69-Pin.png", instruction: "Pin their arms with thighs. Give them a view they can't touch." },
+    { name: "Grapevine Exposure", attacker: null, type: "physical", damage: 15, staminaCost: 15, accuracy: 90, img: "images/grapevine-hold.png", instruction: "Weave legs inside theirs. Spread them wide open." },
+    { name: "The Display", attacker: null, type: "sensual", damage: 10, staminaCost: 5, accuracy: 95, img: "images/the-display.png", instruction: "Sit on chest facing feet. Pin the legs. You are the only thing they can see." },
+
+    // --- CINDY'S GODDESS ARSENAL ---
+    { name: "Amazon Straddle", attacker: "Cindy", type: "strike", damage: 25, staminaCost: 20, accuracy: 90, img: "images/amazon-straddle.png", instruction: "The view from the top. Sit high on his chest, pinning arms with shins." },
+    { name: "Sole Worship", attacker: "Cindy", type: "sensual", damage: 10, staminaCost: 5, accuracy: 100, img: "images/sole-priority.png", instruction: "Press your sole to his chin. He stays there until he kisses the arch." },
+    { name: "Suffocation by Curves", attacker: "Cindy", type: "smother", damage: 35, staminaCost: 30, accuracy: 85, img: "images/breast-smother.png", instruction: "Push his face deep into your chest. Let him struggle for air in paradise." },
+    { name: "Goddess Scissors", attacker: "Cindy", type: "challenge", damage: 40, staminaCost: 35, accuracy: 80, timeLimit: 15, img: "images/goddess-scissors.png", instruction: "Wrap thighs around his neck. Squeeze slowly. Watch his eyes flutter." },
+    { name: "Ball Breaker", attacker: "Cindy", type: "strike", damage: 20, staminaCost: 20, accuracy: 90, img: "images/ball-breaker.png", instruction: "Grip him firmly. A slow, rhythmic pulse." },
+    { name: "Queen's Throne", attacker: "Cindy", type: "smother", damage: 45, staminaCost: 40, accuracy: 75, img: "images/queens-throne.png", instruction: "Full weight face sit. Smother him completely until he taps." },
+
+    // --- CINDY'S FINISHERS (Sudden Death Only) ---
+    { name: "THE MATRIARCH", attacker: "Cindy", type: "finisher", damage: 100, img: "images/the-matriarch.png", instruction: "High mount. Smother his face with your chest until he surrenders completely." },
+    { name: "THE BLACK WIDOW", attacker: "Cindy", type: "finisher", damage: 100, img: "images/the-black-widow.png", instruction: "Legs around neck. Squeeze with devastating force. Feel him fade." },
+    { name: "ABSOLUTE ZERO", attacker: "Cindy", type: "finisher", damage: 100, img: "images/absolute-zero.png", instruction: "Full weight face sit. He cannot see, cannot breathe, can only submit." },
+    { name: "THE VENUS TRAP", attacker: "Cindy", type: "finisher", damage: 100, img: "images/the-venus-trap.png", instruction: "Wrap your entire body around his head. Total engulfment." },
+
+    // --- WAYNE'S TECHNICAL ARSENAL ---
+    { name: "The Stockade", attacker: "Wayne", type: "challenge", damage: 15, staminaCost: 15, accuracy: 85, timeLimit: 20, img: "images/the-stockade.png", instruction: "Lock wrists above her head. She is helpless and at your mercy." },
+    { name: "Thigh Spread Pin", attacker: "Wayne", type: "physical", damage: 20, staminaCost: 15, accuracy: 90, img: "images/thigh-spread-pin.png", instruction: "Force her thighs wide apart and pin them with your legs." },
+    { name: "The Lockdown", attacker: "Wayne", type: "physical", damage: 10, staminaCost: 10, accuracy: 95, img: "images/the-lockdown.png", instruction: "Complete immobilization. Not a single part of her moves." },
+    { name: "Vice Grip", attacker: "Wayne", type: "strike", damage: 15, staminaCost: 10, accuracy: 90, img: "images/vice-grip.png", instruction: "Squeeze her breasts firmly together. Remind her who they belong to." },
+    { name: "The Crucifix", attacker: "Wayne", type: "challenge", damage: 20, staminaCost: 25, accuracy: 80, timeLimit: 15, img: "images/the-crucifix.png", instruction: "Pin her arms using only your legs. Hands are free to torment her." },
+    { name: "Jaw Clamp", attacker: "Wayne", type: "strike", damage: 10, staminaCost: 5, accuracy: 95, img: "images/jaw-clamp.png", instruction: "Grip her jaw firmly. Force your kisses on her." },
+
+    // --- WAYNE'S FINISHERS (Sudden Death Only) ---
+    { name: "THE MONOLITH", attacker: "Wayne", type: "finisher", damage: 100, img: "images/the-monolith.png", instruction: "Lay your full weight flat on top. Spread wide. She cannot move an inch." },
+    { name: "THE ANACONDA", attacker: "Wayne", type: "finisher", damage: 100, img: "images/the-anaconda.png", instruction: "Wrap from the side. Crush the air from her lungs slowly." },
+    { name: "THE PILLAGER", attacker: "Wayne", type: "finisher", damage: 100, img: "images/the-pillager.png", instruction: "Pin wrists, force legs, and destroy her torso until she cries out." },
+    { name: "THE CRUSHER", attacker: "Wayne", type: "finisher", damage: 100, img: "images/the-crusher.png", instruction: "Full weight body pin with intense grinding. Constriction and pressure." },
+
+    // --- SENSUAL RELAXATION ---
+    { name: "Deep Kiss", type: "sensual", damage: 5, staminaCost: -10, timer: 60, instruction: "Stop everything. Kiss deeply and passionately for 60 seconds." },
+    { name: "The Tease", type: "sensual", damage: 5, staminaCost: -5, timer: 45, instruction: "Trace your fingers along lips, neck, and chest. They must stay perfectly still." },
+    { name: "Body Worship", type: "sensual", damage: 10, staminaCost: -15, timer: 45, instruction: "Slowly kiss and worship your opponent's body. Appreciate the prize." },
+    { name: "Heartbeat Check", type: "sensual", damage: 0, staminaCost: -20, timer: 60, instruction: "Lay your head on their chest. Listen to their racing heart for one minute." },
+    
+    // --- MECHANICS ---
+    { name: "Submission Recharge", attacker: "Cindy", type: "recharge", timeLimit: 10, instruction: "Cindy picks a hold, and Wayne must trap her for 10s to refill her energy." }
+];
