@@ -856,16 +856,30 @@ const App = {
         const adv = document.getElementById('advanced-settings');
         if (toggleAdvanced && adv) {
             const setAdv = (open) => {
-                this.state.advancedOpen = !!open;
+                const willOpen = !!open;
+                // idempotent
+                if (this.state.advancedOpen === willOpen) return;
+                this.state.advancedOpen = willOpen;
                 toggleAdvanced.setAttribute('aria-expanded', this.state.advancedOpen ? 'true' : 'false');
-                if (this.state.advancedOpen) { adv.hidden = false; adv.classList.add('advanced-expanded'); adv.classList.remove('advanced-collapsed'); }
-                else { adv.hidden = true; adv.classList.remove('advanced-expanded'); adv.classList.add('advanced-collapsed'); }
+                if (this.state.advancedOpen) {
+                    // Opening: make visible then add expanded class for transition
+                    adv.hidden = false;
+                    // allow layout to update then animate
+                    requestAnimationFrame(() => {
+                        adv.classList.add('advanced-expanded'); adv.classList.remove('advanced-collapsed');
+                    });
+                } else {
+                    // Closing: remove expanded class to trigger transition, then hide after transition completes
+                    adv.classList.remove('advanced-expanded'); adv.classList.add('advanced-collapsed');
+                    // hide after transition duration (match CSS 320ms)
+                    setTimeout(() => { try { adv.hidden = true; } catch(e){} }, 340);
+                }
                 this.saveSettings();
                 this.updateAdvancedSummary();
             };
             // initialize from loaded state (loadSettings() may have set this.state.advancedOpen already)
             setAdv(!!this.state.advancedOpen);
-            toggleAdvanced.addEventListener('click', () => setAdv(!this.state.advancedOpen));
+            toggleAdvanced.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setAdv(!this.state.advancedOpen); });
         }
 
         // Wire long-press resume button on the safeword overlay to avoid accidental resume
