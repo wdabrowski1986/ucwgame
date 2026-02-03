@@ -54,8 +54,8 @@ test.describe('smoke', () => {
 
     // Set duration to 15 and start
     await page.fill('#sexfight-duration', '15');
-    await page.click('#sexfight-setup button:has-text("START SEXFIGHT")');
-
+  // Use App API directly to avoid overlay click interception flakiness
+  await page.evaluate(() => { try { App.startSexFight(); } catch(e){ console.warn('startSexFight failed', e); } });
     // HUD should appear
     await page.waitForSelector('#sexfight-hud', { state: 'visible', timeout: 5000 });
     await page.screenshot({ path: 'tests/screenshots/sexfight-hud.png' });

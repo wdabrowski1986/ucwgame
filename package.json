@@ -4,7 +4,7 @@
   "scripts": {
     "generate-sw-assets": "node tools/generate_sw_assets.js",
     "prepare": "git config core.hooksPath .githooks || true",
-    "test": "playwright test --reporter=list"
+    "test": "playwright test --reporter=list --workers=1"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1"
