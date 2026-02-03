@@ -617,6 +617,8 @@ const App = {
             if (adv) { if (this.state.advancedOpen) { adv.classList.add('advanced-expanded'); adv.classList.remove('advanced-collapsed'); adv.hidden = false; } else { adv.classList.remove('advanced-expanded'); adv.classList.add('advanced-collapsed'); adv.hidden = true; } }
             if (tog) tog.setAttribute('aria-expanded', this.state.advancedOpen ? 'true' : 'false');
         }
+        // Update the advanced toggle summary to reflect loaded values
+        try { this.updateAdvancedSummary(); } catch(e) { /* ignore */ }
     },
 
     saveSettings: function() {
@@ -751,7 +753,7 @@ const App = {
 
         // Wire Max Skips input
         const maxSkipsEl = document.getElementById('max-skips');
-        if (maxSkipsEl) { maxSkipsEl.addEventListener('input', (e) => { this.state.maxSkipsPerRound = Math.max(0, parseInt(e.target.value, 10) || 0); this.saveSettings(); try { this.updateSkipUI(); } catch(e){} }); }
+        if (maxSkipsEl) { maxSkipsEl.addEventListener('input', (e) => { this.state.maxSkipsPerRound = Math.max(0, parseInt(e.target.value, 10) || 0); this.saveSettings(); try { this.updateSkipUI(); } catch(e){} this.updateAdvancedSummary(); }); }
 
         // Wire Tap threshold inputs (validate relation between medium < big)
         const tMed = document.getElementById('tap-threshold-medium');
@@ -779,7 +781,7 @@ const App = {
 
         // Wire gauntlet seconds input to state and persist
         const gaunt = document.getElementById('gauntlet-seconds');
-        if (gaunt) { gaunt.addEventListener('input', (e) => { this.state.twoOfThreeRoundSeconds = Math.max(3, parseInt(e.target.value, 10) || 10); this.saveSettings(); }); }
+        if (gaunt) { gaunt.addEventListener('input', (e) => { this.state.twoOfThreeRoundSeconds = Math.max(3, parseInt(e.target.value, 10) || 10); this.saveSettings(); this.updateAdvancedSummary(); }); }
 
         // Wire advanced toggle
         const toggleAdvanced = document.getElementById('toggle-advanced');
@@ -788,9 +790,10 @@ const App = {
             const setAdv = (open) => {
                 this.state.advancedOpen = !!open;
                 toggleAdvanced.setAttribute('aria-expanded', this.state.advancedOpen ? 'true' : 'false');
-                if (this.state.advancedOpen) { adv.hidden = false; adv.classList.add('advanced-expanded'); adv.classList.remove('advanced-collapsed'); toggleAdvanced.innerText = 'Hide Advanced ▴'; }
-                else { adv.hidden = true; adv.classList.remove('advanced-expanded'); adv.classList.add('advanced-collapsed'); toggleAdvanced.innerText = 'Show Advanced ▾'; }
+                if (this.state.advancedOpen) { adv.hidden = false; adv.classList.add('advanced-expanded'); adv.classList.remove('advanced-collapsed'); }
+                else { adv.hidden = true; adv.classList.remove('advanced-expanded'); adv.classList.add('advanced-collapsed'); }
                 this.saveSettings();
+                this.updateAdvancedSummary();
             };
             // initialize from loaded state (loadSettings() may have set this.state.advancedOpen already)
             setAdv(!!this.state.advancedOpen);
@@ -1741,6 +1744,18 @@ const App = {
         // Critical Animation (use percentage threshold)
         if (this.state.p1Health < (0.25 * this.state.maxHealth)) p1.parentElement.classList.add('critical'); else p1.parentElement.classList.remove('critical');
         if (this.state.p2Health < (0.25 * this.state.maxHealth)) p2.parentElement.classList.add('critical'); else p2.parentElement.classList.remove('critical');
+    },
+
+    // Update the small summary shown on the Advanced toggle (Gauntlet seconds and skips)
+    updateAdvancedSummary: function() {
+        try {
+            const tog = document.getElementById('toggle-advanced'); if (!tog) return;
+            const gauntEl = document.getElementById('gauntlet-seconds'); const skipsEl = document.getElementById('max-skips');
+            const g = gauntEl ? (parseInt(gauntEl.value, 10) || this.state.twoOfThreeRoundSeconds) : this.state.twoOfThreeRoundSeconds || 10;
+            const s = skipsEl ? (parseInt(skipsEl.value, 10) || this.state.maxSkipsPerRound) : this.state.maxSkipsPerRound || 3;
+            const base = `Gauntlet ${g}s • Skips ${s}`;
+            if (this.state.advancedOpen) tog.innerText = `Hide Advanced ▴ — ${base}`; else tog.innerText = `Show Advanced ▾ — ${base}`;
+        } catch(e) { /* ignore */ }
     },
 
     updateClothingUI: function() {
