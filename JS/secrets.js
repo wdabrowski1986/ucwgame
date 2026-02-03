@@ -6,7 +6,8 @@ const STIPULATIONS = {
     TWO_OF_THREE: { name: "2 out of 3 Falls", desc: "First to win 2 rounds takes the match." },
     SUDDEN_DEATH: { name: "Sudden Death", desc: "Start at 50% Health. No Healing. High Stakes." },
     BLINDFOLD: { name: "Blindfold Match", desc: "Attacker must be blindfolded for every move." },
-    SUBMISSION: { name: "Submission Only", desc: "No Pinfalls. You must force a Tap Out to win." }
+    SUBMISSION: { name: "Submission Only", desc: "No Pinfalls. You must force a Tap Out to win." },
+    SEXFIGHT: { name: "Sexfight", desc: "Choose: First to Cum, Last to Cum, or Most Orgasms in a time limit. Minimal Ref interaction." }
 };
 
 // --- WARDROBE DATA ---

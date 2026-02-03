@@ -132,6 +132,13 @@ body {
 #toast-undo { background: transparent; color: #ffd; border: 1px solid rgba(255,255,255,0.06); padding:6px 10px; border-radius:6px; cursor:pointer; }
 #toast-undo:focus { outline: none; box-shadow: 0 0 0 4px rgba(212,175,55,0.06); }
 
+/* Sexfight UI */
+.btn-orgasm { padding: 12px 14px; border-radius: 8px; color: #fff; font-weight:800; }
+#btn-orgasm-wayne { background: linear-gradient(135deg, #00aaff, #0044aa); }
+#btn-orgasm-cindy { background: linear-gradient(135deg, #ff2a8a, #b0003f); }
+#sexfight-hud { font-weight: 700; font-size: 1rem; }
+
+
 
 
 /* Tooltip for small inline help icons */

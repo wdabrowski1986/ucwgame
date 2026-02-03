@@ -928,9 +928,96 @@ const App = {
         // If Sudden Death, show move selection modal before first round
         if (this.state.stipulation === 'SUDDEN_DEATH') {
             try { this.populateSuddenDeathMoves(); document.getElementById('sudden-death-setup').style.display = 'flex'; document.body.classList.add('overlay-open'); } catch(e){ console.warn('Failed to show Sudden Death setup', e); setTimeout(() => this.nextRound(), 4000); }
+        } else if (this.state.stipulation === 'SEXFIGHT') {
+            try { document.getElementById('sexfight-setup').style.display = 'flex'; document.body.classList.add('overlay-open'); } catch(e){ console.warn('Failed to show Sexfight setup', e); setTimeout(() => this.nextRound(), 4000); }
         } else {
             setTimeout(() => this.nextRound(), 4000);
         }
+
+        // --- SEXFIGHT HELPERS ---
+    },
+
+    openSexFightSetup: function() {
+        try { document.getElementById('sexfight-setup').style.display = 'flex'; document.body.classList.add('overlay-open'); } catch(e) {}
+    },
+
+    startSexFight: function() {
+        // Read settings
+        try { document.getElementById('sexfight-setup').style.display = 'none'; document.body.classList.remove('overlay-open'); } catch(e) {}
+        const modeEl = document.querySelector('input[name="sexf-mode"]:checked'); const durEl = document.getElementById('sexfight-duration');
+        const mode = modeEl ? modeEl.value : 'MOST'; const dur = durEl ? Math.max(10, parseInt(durEl.value, 10) || 60) : 60;
+        this.state.sexfight = { mode: mode, duration: dur, tally: { wayne:0, cindy:0 }, timestamps: { wayne:[], cindy:[] }, started: true, startTime: Date.now() };
+        // Show HUD & enable orgasm buttons
+        const hud = document.getElementById('sexfight-hud'); if (hud) { hud.style.display = 'block'; hud.innerText = `${mode} — Time ${dur}s — Wayne: 0 • Cindy: 0`; }
+        try { document.getElementById('btn-orgasm-wayne').style.display = 'inline-block'; document.getElementById('btn-orgasm-cindy').style.display = 'inline-block'; } catch(e) {}
+        this.announce(`Sexfight started: ${mode}. ${dur} seconds. Go!`, 'high');
+        // Start timer
+        try { if (this.state._sexfTimer) clearTimeout(this.state._sexfTimer); } catch(e) {}
+        this.state._sexfTimer = setTimeout(() => { this.endSexFight(); }, dur * 1000);
+        // show numeric countdown on countdown element
+        try { this.startCountdown(dur); } catch(e) {}
+    },
+
+    orgasm: function(player) {
+        if (!this.state.sexfight || !this.state.sexfight.started) { this.announce('Not in Sexfight mode.', 'normal'); return; }
+        // record event
+        const now = Date.now();
+        this.state.sexfight.tally[player] = (this.state.sexfight.tally[player] || 0) + 1;
+        this.state.sexfight.timestamps[player] = this.state.sexfight.timestamps[player] || [];
+        this.state.sexfight.timestamps[player].push(now);
+        this.updateSexFightHUD();
+        this.vibrate([40], true);
+        // Mode-specific immediate resolutions
+        if (this.state.sexfight.mode === 'FIRST') {
+            // First orgasm wins immediately
+            this.endSexFight(player);
+            return;
+        }
+        if (this.state.sexfight.mode === 'LAST') {
+            // If both have orgasmed, compare last timestamp
+            const wts = this.state.sexfight.timestamps.wayne || [];
+            const cts = this.state.sexfight.timestamps.cindy || [];
+            if (wts.length > 0 && cts.length > 0) {
+                const wLast = wts[wts.length-1]; const cLast = cts[cts.length-1];
+                if (wLast === cLast) { this.announce('Simultaneous orgasm — draw!', 'normal'); this.endSexFight(null); return; }
+                const winner = (wLast > cLast) ? 'wayne' : 'cindy'; this.endSexFight(winner); return;
+            }
+        }
+    },
+
+    updateSexFightHUD: function() {
+        try { const hud = document.getElementById('sexfight-hud'); if (!hud || !this.state.sexfight) return; const t = this.state.sexfight.tally || {wayne:0,cindy:0}; const mode = this.state.sexfight.mode; hud.innerText = `${mode} — Time ${this.state.sexfight.duration}s — Wayne: ${t.wayne} • Cindy: ${t.cindy}`; } catch(e) { }
+    },
+
+    endSexFight: function(winner) {
+        // If winner provided, immediate; otherwise evaluate based on mode
+        try { if (this.state._sexfTimer) { clearTimeout(this.state._sexfTimer); this.state._sexfTimer = null; } } catch(e) {}
+        try { this.stopCountdown(); } catch(e) {}
+        const s = this.state.sexfight || {};
+        let resolvedWinner = winner || null;
+        if (!resolvedWinner) {
+            if (s.mode === 'MOST') {
+                const w = (s.tally && s.tally.wayne) || 0; const c = (s.tally && s.tally.cindy) || 0;
+                if (w === c) { this.announce(`Sexfight tied ${w}—${c}. Draw.`, 'normal'); resolvedWinner = null; }
+                else resolvedWinner = (w>c)?'wayne':'cindy';
+            } else if (s.mode === 'LAST') {
+                // if nobody orgasmed, draw; otherwise whoever orgasmed last
+                const wts = (s.timestamps && s.timestamps.wayne && s.timestamps.wayne.slice()) || [];
+                const cts = (s.timestamps && s.timestamps.cindy && s.timestamps.cindy.slice()) || [];
+                if (!wts.length && !cts.length) { this.announce('No orgasms — draw!', 'normal'); resolvedWinner = null; }
+                else if (!wts.length) resolvedWinner = 'cindy'; else if (!cts.length) resolvedWinner = 'wayne'; else { const wLast = wts[wts.length-1]; const cLast = cts[cts.length-1]; resolvedWinner = (wLast > cLast) ? 'wayne' : 'cindy'; }
+            }
+        }
+        // Cleanup UI
+        try { document.getElementById('sexfight-hud').style.display = 'none'; document.getElementById('btn-orgasm-wayne').style.display = 'none'; document.getElementById('btn-orgasm-cindy').style.display = 'none'; } catch(e) {}
+        this.state.sexfight = null;
+        if (!resolvedWinner) { this.announce('Sexfight ended in a draw.', 'normal'); return; }
+        this.announce(`Sexfight winner: ${resolvedWinner.toUpperCase()}! Stakes apply.`, 'win');
+        const loser = (resolvedWinner === 'wayne') ? 'cindy' : 'wayne';
+        // Apply BIG punishment to loser and end match
+        this.applyPunishmentBySeverity('BIG', loser);
+        // Also mark match finished (call endMatchWithWinner for full winner flow)
+        setTimeout(() => { this.endMatchWithWinner(resolvedWinner); }, 1200);
     },
 
     // --- GAME LOOP ---
