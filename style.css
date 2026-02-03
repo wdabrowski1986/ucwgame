@@ -125,6 +125,13 @@ body {
 #btn-reset-advanced:hover { background: rgba(255,80,120,0.04); }
 .small-note.muted { color: #999; font-size: 0.75rem; }
 
+/* Toast / undo notification */
+#toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(8px); z-index: 1000; display: none; opacity: 0; transition: opacity 0.18s ease, transform 0.18s ease; }
+#toast.show { display: block; opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-body { background: rgba(8,8,10,0.96); color: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); display:flex; gap:10px; align-items:center; box-shadow: 0 8px 28px rgba(0,0,0,0.6); }
+#toast-undo { background: transparent; color: #ffd; border: 1px solid rgba(255,255,255,0.06); padding:6px 10px; border-radius:6px; cursor:pointer; }
+#toast-undo:focus { outline: none; box-shadow: 0 0 0 4px rgba(212,175,55,0.06); }
+
 
 
 /* Tooltip for small inline help icons */

@@ -549,6 +549,54 @@ const App = {
     
     synth: window.speechSynthesis,
 
+    // Transient undo snapshot for advanced reset
+    _lastAdvancedSnapshot: null,
+    _undoToastTimer: null,
+
+    showUndoToast: function(message, durationMs) {
+        try {
+            const toast = document.getElementById('toast'); const msg = document.getElementById('toast-msg'); const undo = document.getElementById('toast-undo');
+            if (!toast || !msg || !undo) return;
+            msg.innerText = message || 'Changed';
+            toast.classList.add('show'); toast.style.display = 'block';
+            // Ensure previous timer cleared
+            if (this._undoToastTimer) { clearTimeout(this._undoToastTimer); this._undoToastTimer = null; }
+            // Attach undo click once
+            const onUndo = () => { try { this.undoResetAdvancedSettings(); } catch(e){} };
+            undo.onclick = onUndo;
+            // Auto-hide after duration
+            const ms = durationMs || 6000;
+            this._undoToastTimer = setTimeout(() => { try { toast.classList.remove('show'); setTimeout(()=>{ toast.style.display = 'none'; }, 210); this._lastAdvancedSnapshot = null; this._undoToastTimer = null; } catch(e){} }, ms);
+        } catch(e) { console.warn('showUndoToast failed', e); }
+    },
+
+    undoResetAdvancedSettings: function() {
+        try {
+            if (!this._lastAdvancedSnapshot) { this.announce('Nothing to undo.', 'normal'); return; }
+            const snap = this._lastAdvancedSnapshot;
+            // Restore values to state and DOM
+            this.state.twoOfThreeRoundSeconds = snap.twoOfThreeRoundSeconds;
+            this.state.maxSkipsPerRound = snap.maxSkipsPerRound;
+            this.state.tapThresholds = Object.assign({}, snap.tapThresholds);
+            this.state.stakes = Object.assign({}, snap.stakes);
+            // Update DOM
+            const ga = document.getElementById('gauntlet-seconds'); if (ga) ga.value = this.state.twoOfThreeRoundSeconds;
+            const ms = document.getElementById('max-skips'); if (ms) ms.value = this.state.maxSkipsPerRound;
+            const tm = document.getElementById('tap-threshold-medium'); if (tm) tm.value = this.state.tapThresholds.medium;
+            const tb = document.getElementById('tap-threshold-big'); if (tb) tb.value = this.state.tapThresholds.big;
+            const sw = document.getElementById('stake-wayne'); if (sw) sw.value = this.state.stakes.wayne || '';
+            const sc = document.getElementById('stake-cindy'); if (sc) sc.value = this.state.stakes.cindy || '';
+            // Persist
+            this.saveSettings(); try { this.updateSkipUI(); } catch(e){}
+            this.updateAdvancedSummary();
+            this.announce('Advanced settings restored.', 'normal');
+            // Clear snapshot & hide toast
+            this._lastAdvancedSnapshot = null;
+            try { const toast = document.getElementById('toast'); if (toast) { toast.classList.remove('show'); setTimeout(()=>{ toast.style.display = 'none'; },210); } } catch(e){}
+            if (this._undoToastTimer) { clearTimeout(this._undoToastTimer); this._undoToastTimer = null; }
+        } catch(e) { console.warn('undoResetAdvancedSettings failed', e); }
+    },
+
     // --- INITIALIZATION ---
     loadHistory: function() {
         const stored = localStorage.getItem('ubc_history');
@@ -1769,6 +1817,13 @@ const App = {
 
     resetAdvancedSettings: function() {
         if (!confirm('Reset advanced settings to defaults?')) return;
+        // snapshot current settings so user can undo
+        this._lastAdvancedSnapshot = {
+            twoOfThreeRoundSeconds: this.state.twoOfThreeRoundSeconds,
+            maxSkipsPerRound: this.state.maxSkipsPerRound,
+            tapThresholds: Object.assign({}, this.state.tapThresholds || {}),
+            stakes: Object.assign({}, this.state.stakes || {})
+        };
         // Defaults
         const defaults = { twoOfThreeRoundSeconds: 10, maxSkipsPerRound: 3, tapMedium: 3, tapBig: 8, stakes: { wayne: '', cindy: '' } };
         try {
@@ -1787,7 +1842,9 @@ const App = {
             // Persist and refresh
             this.saveSettings(); try { this.updateSkipUI(); } catch(e) {}
             this.updateAdvancedSummary();
-            this.announce('Advanced settings reset to defaults.', 'normal');
+            this.announce('Advanced settings reset to defaults. (Undo available)', 'normal');
+            // Show undo toast for a short window
+            this.showUndoToast('Advanced settings reset. Undo?', 6000);
         } catch(e) { console.warn('resetAdvancedSettings failed', e); }
     },
 

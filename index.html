@@ -358,6 +358,15 @@
     <!-- Diagnostic panel (visit with ?diag=1 to auto-show and run checks) -->
     <div id="diag-panel" style="display:none;position:fixed;bottom:12px;left:12px;right:12px;z-index:900;background:rgba(0,0,0,0.9);color:#fff;padding:12px;border-radius:8px;max-height:50vh;overflow:auto;font-family:monospace;white-space:pre-wrap;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Diagnostic</strong><div><button id="diag-accept-start" class="btn-menu" style="display:none;margin-right:8px;">Accept & Start</button><button onclick="document.getElementById('diag-panel').style.display='none'" class="btn-reset">Close</button></div></div>
+    </div>
+
+    <!-- Toast/Undo: transient small notification -->
+    <div id="toast" class="toast" aria-live="polite" role="status" style="display:none;">
+        <div class="toast-body">
+            <span id="toast-msg">Advanced settings reset.</span>
+            <button id="toast-undo" class="btn-reset">Undo</button>
+        </div>
+    </div>
         <pre id="diag-pre" style="color:#ddd;font-size:0.9rem"></pre>
     </div>
     <script>
