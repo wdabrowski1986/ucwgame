@@ -818,6 +818,14 @@ const App = {
 
         // Hide start screen immediately to avoid blocking on mobile when fullscreen/wakeLock prompt appears
         document.getElementById('start-screen').style.display = 'none';
+        // Auto-collapse advanced settings when a match starts for a cleaner UX
+        try {
+            const adv = document.getElementById('advanced-settings');
+            const tog = document.getElementById('toggle-advanced');
+            if (adv) { adv.hidden = true; adv.classList.remove('advanced-expanded'); adv.classList.add('advanced-collapsed'); }
+            if (tog) { tog.setAttribute('aria-expanded', 'false'); tog.innerText = 'Show Advanced ▾'; }
+            this.state.advancedOpen = false; this.saveSettings();
+        } catch(e) { /* ignore if not present */ }
         // Mark that a match is now running so responsive UI can show/hide controls appropriately
         if (typeof document !== 'undefined' && document.body) document.body.classList.add('in-match');
         
