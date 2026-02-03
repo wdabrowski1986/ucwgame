@@ -138,6 +138,13 @@ body {
 #btn-orgasm-cindy { background: linear-gradient(135deg, #ff2a8a, #b0003f); }
 #sexfight-hud { font-weight: 700; font-size: 1rem; transition: box-shadow 0.2s ease, transform 0.18s ease; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); background: rgba(40,10,20,0.6); }
 .sexfight-countdown { color: var(--gold); font-weight: 900; font-size: 1.15rem; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,0.25); }
+
+/* Sexfight centered overlay styles */
+#sexfight-overlay { display:none; }
+#sexfight-overlay-count { font-family: 'Cinzel', serif; letter-spacing:1px; }
+#sexfight-overlay.tiebreaker-active #sexfight-overlay-count { box-shadow: 0 0 40px rgba(255,80,140,0.32); border: 2px solid rgba(255,80,140,0.6); }
+#sexfight-overlay-count.urgent { animation: urgentPulse 0.9s infinite; transform: scale(1.04); }
+@keyframes urgentPulse { 0% { box-shadow: 0 10px 30px rgba(212,175,55,0.06); } 50% { box-shadow: 0 18px 60px rgba(212,175,55,0.22); transform: scale(1.06); } 100% { box-shadow: 0 10px 30px rgba(212,175,55,0.06); transform: scale(1.0); } }
 #sexfight-hud.tiebreaker-active { animation: tiebreakerPulse 1s infinite; box-shadow: 0 0 30px rgba(255,80,140,0.26); border-color: rgba(255,80,140,0.8); transform: scale(1.02); }
 @keyframes tiebreakerPulse { 0% { box-shadow: 0 0 8px rgba(255,80,140,0.12); } 50% { box-shadow: 0 0 30px rgba(255,80,140,0.28); } 100% { box-shadow: 0 0 8px rgba(255,80,140,0.12); } }
 

@@ -962,8 +962,13 @@ const App = {
                 if (!this.state.sexfight || !this.state.sexfight.endTime) return;
                 const rem = Math.max(0, Math.ceil((this.state.sexfight.endTime - Date.now()) / 1000));
                 const el = document.getElementById('sexfight-countdown'); if (el) el.innerText = rem + 's';
+                // Also update centered overlay
+                const overlay = document.getElementById('sexfight-overlay-count'); if (overlay) overlay.innerText = rem + 's';
+                const overlayWrap = document.getElementById('sexfight-overlay'); if (overlayWrap) { overlayWrap.style.display = 'flex'; if (rem <= 10) overlay.classList.add('urgent'); else overlay.classList.remove('urgent'); }
                 if (rem <= 0) {
                     clearInterval(this.state._sexfCountdownInterval); this.state._sexfCountdownInterval = null;
+                    // hide overlay once the timed session has ended (unless tiebreaker is activated separately)
+                    try { const overlayWrap2 = document.getElementById('sexfight-overlay'); if (overlayWrap2) { overlayWrap2.style.display = 'none'; overlayWrap2.classList.remove('urgent'); } } catch(e) {}
                 }
             } catch(e) { }
         }, 250);
