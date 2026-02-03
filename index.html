@@ -2,604 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Bed Championship: Definitive Edition</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;600;900&display=swap" rel="stylesheet">
-    <link rel="preload" as="image" href="images/ring-bg.jpg">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCW: Goddess Edition</title>
     <link rel="stylesheet" href="style.css">
-    <!-- PWA & mobile webapp meta -->
-    <meta name="theme-color" content="#120007">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <!-- Use relative paths so manifest and service worker load correctly on GitHub Pages (repo subpath) -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="images/belt.png" type="image/png">
-    <link rel="apple-touch-icon" href="images/belt.png">
 </head>
 <body>
-
-    <div id="start-screen" class="overlay">
-        <h1 class="main-title">CHAMPIONSHIP<br>WRESTLING</h1>
-        
-        <div class="belt-display">
-            <div class="belt-label">REIGNING CHAMPION</div>
-            <div id="champ-name">VACANT</div>
-            <div id="champ-stats">Series Tied 0-0</div>
-        </div>
-        <div class="settings-row" style="margin-top:8px;">
-            <div id="ref-name" style="color:#ffd; font-weight:700;">Referee: TBD</div>
-        </div>
-
-        <div class="settings-row">
-            <input type="checkbox" id="silent-mode">
-            <label for="silent-mode">Silent Mode</label>
-        </div>
-
-        <div class="settings-row">
-            <label for="break-length">Break Time</label>
-            <input type="range" id="break-length" min="3" max="15" value="8" oninput="document.getElementById('break-length-val').innerText = this.value + 's'">
-            <span id="break-length-val">8s</span>
-        </div>
-
-
-
-        <button class="btn-menu" onclick="safeStart()">START MATCH</button>
-        <button onclick="App.resetData()" class="btn-reset">Reset History</button>
-        <div class="settings-row">
-            <button id="toggle-advanced" class="btn-reset" aria-expanded="false" aria-controls="advanced-settings">Show Advanced ▾</button>
-        </div>
-        <div id="advanced-settings" class="advanced-collapsed" hidden>
-            <div class="settings-row">
-                <label for="gauntlet-seconds">Gauntlet Turn Length</label>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <input type="number" id="gauntlet-seconds" min="3" max="30" value="10" title="Seconds per gauntlet turn. Recommended 8–12s for fast play." aria-describedby="gauntlet-tooltip" />
-                    <span class="tooltip" id="gauntlet-tooltip" tabindex="0" role="tooltip">?
-                        <span class="tooltiptext">Seconds per gauntlet turn. Recommended 8–12s for fast play. Increase for slower, deliberate play.</span>
-                    </span>
-                </div>
-                <div class="small-note">Seconds per gauntlet turn (Submission Gauntlet)</div>
+    <div id="ritual-overlay">
+        <div class="ritual-content">
+            <h1 id="ritual-title">THE GODDESS RITUAL</h1>
+            <p id="ritual-instruction">Wayne, provide the 'Offering' (60s Massage) to begin.</p>
+            <div id="ritual-steps">
+                <span id="step-1" class="step">⚖️ Offering</span>
+                <span id="step-2" class="step">👑 Mark</span>
+                <span id="step-3" class="step">💋 Seal</span>
             </div>
-            <div class="settings-row">
-                <label for="max-skips">Max Skips / Round</label>
-                <input type="number" id="max-skips" min="0" max="10" value="3">
-                <div class="small-note">Configurable for playtesting</div>
+            <button id="next-ritual-btn" onclick="advanceRitual()">PERFORM TRIBUTE</button>
+            <button id="start-match-btn" class="hidden" onclick="startMatch()">BEGIN BATTLE</button>
+        </div>
+    </div>
+
+    <div id="arena-hud" class="hidden">
+        <div class="stats-container">
+            <div class="player-block" id="wayne-block">
+                <h3>WAYNE <span id="stun-icon" class="hidden">👑</span></h3>
+                <div class="bar-bg"><div id="hp-wayne" class="hp-bar"></div></div>
+                <div class="bar-bg"><div id="st-wayne" class="st-bar"></div></div>
+                <div class="layer-dots" id="layers-wayne"></div>
             </div>
-            <div class="settings-row">
-                <label for="tap-threshold-medium">Medium Threshold</label>
-                <input type="number" id="tap-threshold-medium" min="1" max="99" value="3">
-                <label for="tap-threshold-big">Big Threshold</label>
-                <input type="number" id="tap-threshold-big" min="2" max="999" value="8">
-                <div class="small-note">Taps &gt;= Medium/Big determine punishment severity</div>
-            </div>
-            <div class="settings-row">
-                <label for="stake-wayne">Wayne's Stake</label>
-                <input type="text" id="stake-wayne" placeholder="What Wayne will do if he loses" />
-            </div>
-            <div class="settings-row">
-                <label for="stake-cindy">Cindy's Stake</label>
-                <input type="text" id="stake-cindy" placeholder="What Cindy will do if she loses" />
-            </div>
-            <div class="settings-row" style="justify-content:center;margin-top:8px;">
-                <button id="btn-reset-advanced" class="btn-reset" onclick="App.resetAdvancedSettings()">Reset Advanced</button>
+            <div class="player-block" id="cindy-block">
+                <h3>GODDESS</h3>
+                <div class="bar-bg"><div id="hp-cindy" class="hp-bar"></div></div>
+                <div class="bar-bg"><div id="st-cindy" class="st-bar"></div></div>
+                <div class="layer-dots" id="layers-cindy"></div>
             </div>
         </div>
-        <div class="settings-row" style="margin-top:10px;">
-            <label for="match-intensity">Match Intensity</label>
-            <select id="match-intensity">
-                <option value="SOFT">Soft</option>
-                <option value="NORMAL" selected>Normal</option>
-                <option value="ROUGH">Rough</option>
-            </select>
-            <div id="intensity-hint" class="intensity-hint" aria-live="polite">Intensity: Normal — Balanced (moderate damage, standard strip chance).</div>
-        </div>
-
-        <div class="settings-row">
-            <label for="max-skips">Max Skips / Round</label>
-            <input type="number" id="max-skips" min="0" max="10" value="3">
-            <div class="small-note">Configurable for playtesting</div>
-        </div>
-
-        <div class="settings-row">
-            <label for="tap-threshold-medium">Medium Threshold</label>
-            <input type="number" id="tap-threshold-medium" min="1" max="99" value="3">
-            <label for="tap-threshold-big">Big Threshold</label>
-            <input type="number" id="tap-threshold-big" min="2" max="999" value="8">
-            <div class="small-note">Taps &gt;= Medium/Big determine punishment severity</div>
-        </div>
-
-        <div class="settings-row">
-            <label for="stake-wayne">Wayne's Stake</label>
-            <input type="text" id="stake-wayne" placeholder="What Wayne will do if he loses" />
-        </div>
-        <div class="settings-row">
-            <label for="stake-cindy">Cindy's Stake</label>
-            <input type="text" id="stake-cindy" placeholder="What Cindy will do if she loses" />
-        </div>
-        <p id="load-error" style="display:none;color:#ff8fa3;margin-top:12px;font-weight:700;"></p>
+        <div id="move-menu"></div>
     </div>
 
-    <!-- Safeword / Pause Overlay -->
-    <div id="safeword-overlay" class="overlay" style="display:none;">
-        <h1 style="margin-bottom:18px;color:var(--danger-red);">PAUSED — SAFETY</h1>
-        <p style="color:#ddd;margin-bottom:18px;">The match is paused. Press and hold <strong>Resume</strong> for 1s to resume the match.</p>
-        <button id="btn-resume" class="btn-menu">Press & Hold to Resume</button>
-    </div>
-
-    <div id="strip-screen" class="overlay" style="display:none;">
-        <div class="strip-title" id="strip-player-name">PLAYER</div>
-        <div class="strip-subtitle">WARDROBE MALFUNCTION</div>
-        <div class="strip-item" id="strip-item-name">ITEM</div>
-        <button class="btn-menu" onclick="App.confirmStrip()">DONE</button>
-    </div>
-
-    <div id="kickout-overlay" class="overlay" style="display:none;">
-        <h1 id="kickout-title">PINFALL!</h1>
-        <button id="btn-kickout" onclick="App.attemptKickout()">TAP TO<br>ESCAPE!</button>
-        <p id="kickout-sub">ONE TAP TO SURVIVE</p>
-    </div>
-
-    <!-- Winner screen shown first when match ends -->
-    <div id="winner-screen" class="overlay" style="display:none;">
-        <h1 class="punish-header">WINNER!</h1>
-        <img id="winner-belt" src="images/belt.png" alt="Championship Belt">
-        <p id="winner-name" style="font-size:2rem;margin-bottom:8px;color:var(--gold)"></p>
-        <p id="winner-sub" style="color:#ccc;margin-bottom:20px;">Well played. Prepare for punishment.</p>
-        <button class="btn-menu" onclick="App.openPunishmentSelection()">Proceed to Punishment</button>
-    </div>
-
-    <div id="punishment-screen" class="overlay" style="display:none;">
-        <h1 class="punish-header">GAME OVER!</h1>
-        <p id="punish-msg">Select Punishment Category</p>
-        <div id="punish-options">
-            <button class="btn-menu" data-cat="sensual" onclick="App.spinPunishment('sensual')">Sensual</button>
-            <button class="btn-menu" data-cat="domination" onclick="App.spinPunishment('domination')">Domination</button>
-            <button class="btn-menu" data-cat="erotic" onclick="App.spinPunishment('erotic')">Erotic</button>
-            <button class="btn-menu" data-cat="playful" onclick="App.spinPunishment('playful')">Playful</button>
-        </div>
-        <div id="punish-result" style="display:none;">
-            <h2 id="punish-title"></h2>
-            <p id="punish-desc"></p>
-            <button class="btn-menu" onclick="location.reload()">REMATCH</button>
+    <div id="instruction-overlay" class="hidden" onclick="closeInstruction()">
+        <div class="instruction-content">
+            <h1 id="move-name">MOVE</h1>
+            <div id="challenge-timer" class="hidden">15</div>
+            <p id="move-desc">Instruction text...</p>
+            <div id="res-btns" class="hidden">
+                <button class="res-btn" onclick="resolveChallenge('Wayne', event)">WAYNE WON</button>
+                <button class="res-btn" onclick="resolveChallenge('Cindy', event)">CINDY WON</button>
+            </div>
+            <div class="tap-prompt">TAP ANYWHERE TO CONTINUE</div>
         </div>
     </div>
 
-    <!-- Mini punishment overlay for quick between-move punishments -->
-    <div id="mini-punish" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="max-width:90%;background:rgba(0,0,0,0.85);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
-            <h2 id="mini-title" style="color:var(--gold);margin-bottom:8px;">MINI PUNISHMENT</h2>
-            <p id="mini-desc" style="color:#ddd;margin-bottom:12px;"></p>
-            <div id="mini-timer" style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;"><div id="mini-timer-fill" style="height:100%;width:100%;background:var(--danger-red);transition:width linear;"></div></div>
-        </div>
-    </div>
-
-    <!-- Image zoom overlay: click/tap main image to magnify -->
-    <div id="image-zoom" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
-        <img id="image-zoom-img" src="" alt="Zoomed" style="max-width:92%;max-height:90%;border-radius:8px;box-shadow:0 30px 80px rgba(0,0,0,0.8);" />
-    </div>
-
-    <!-- Main content container (constrains width on large screens) -->
-    <div class="page-container">
-    <div id="hud">
-        <div class="player-card">
-            <div class="name-tag" style="color:var(--p1-color)">WAYNE <span id="p1-falls"></span></div>
-            <div class="stats-tag" id="p1-stats">0 Wins</div>
-            <div class="clothing-tag" id="p1-clothing">Fully Clothed</div>
-            <div class="bar-frame"><div id="p1-bar" class="health-fill"></div></div>
-        </div>
-        
-        <div class="player-card right-align">
-            <div class="name-tag" style="color:var(--p2-color)"><span id="p2-falls"></span> CINDY</div>
-            <div class="stats-tag" id="p2-stats">0 Wins</div>
-            <div class="clothing-tag" id="p2-clothing">Fully Clothed</div>
-            <div class="bar-frame"><div id="p2-bar" class="health-fill"></div></div>
-        </div>
-    </div>
-
-    <div id="arena">
-        <div id="stipulation-banner">Standard Rules</div>
-        <div id="event-badge">EVENT</div>
-        
-        <img id="main-image" src="" alt="Move">
-        
-        <div id="instruction-text">Initializing...</div>
-        <div id="sub-text"></div>
-        <!-- Combo display -->
-        <div id="combo-display" style="display:none;">COMBO <span id="combo-count">1</span></div>
-        <!-- Numeric countdown shown during setup and action phases -->
-        <div id="countdown" style="display:none;">0</div>
-    </div>
-
-    <div id="timer-strip"><div id="timer-fill"></div></div>
-    <div id="sudden-hud" style="display:none;position:fixed;bottom:120px;left:12px;right:12px;z-index:620;text-align:center;color:#ffd;font-weight:700;"></div>
-
-    <!-- Center overlay countdown for Sexfight -->
-    <div id="sexfight-overlay" style="display:none;position:fixed;inset:0;z-index:800;align-items:center;justify-content:center;pointer-events:none;">
-        <div id="sexfight-overlay-count" style="font-size:6rem;color:var(--gold);font-weight:900;text-shadow:0 6px 24px rgba(0,0,0,0.7);background:rgba(0,0,0,0.6);padding:20px 36px;border-radius:14px;pointer-events:auto;">60s</div>
-    </div>
-
-    <div id="sexfight-hud" style="display:none;position:fixed;bottom:120px;left:12px;right:12px;z-index:620;text-align:center;color:#ffb6c1;font-weight:700;">
-        <span id="sexfight-mode"></span>
-        <span id="sexfight-tally" style="margin-left:10px;"></span>
-        <span id="sexfight-countdown" class="sexfight-countdown" style="margin-left:10px;"></span>
-    </div>
-
-    <div id="controls-area">
-        <!-- Sexfight orgasm buttons (visible only in SEXFIGHT mode) -->
-        <button id="btn-orgasm-wayne" class="btn-game btn-orgasm" onclick="App.orgasm('wayne')" style="display:none;background:#00a;">WAYNE ORGASM</button>
-        <button id="btn-orgasm-cindy" class="btn-game btn-orgasm" onclick="App.orgasm('cindy')" style="display:none;background:#b0054f;">CINDY ORGASM</button>
-
-        <button id="btn-reversal" class="btn-game" onclick="App.handleReversal()">REVERSED<br>SURVIVED</button>
-        <button id="btn-addtap" class="btn-game btn-tap" onclick="App.addTap()">SUBMISSION +1<br><span id="tap-count" style="font-size:0.8rem;opacity:0.9;">0</span></button>
-        <button id="btn-peek" class="btn-game btn-peek" onclick="App.peek()" style="display:none;">PEEK</button>
-        <button id="btn-skip" class="btn-game btn-skip" onclick="App.skipMove()">SKIP MOVE</button>
-        <button id="btn-endround" class="btn-game btn-end" onclick="App.openRoundSummary()">END ROUND</button>
-        <button id="btn-quit-round" class="btn-game btn-quit" onclick="App.quitRound()">I QUIT ROUND (MERCY)</button>
-        <button id="btn-tapout" class="btn-game" onclick="App.handleTapOut()">I TAP OUT (GIVE UP ROUND)</button>
-        <button id="btn-safeword" class="btn-game btn-safety" onclick="App.togglePause()">SAFETY</button>
-    </div>
-
-    <!-- Round summary modal shown at end of action (confirm results & apply punishment) -->
-    <div id="round-summary" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="max-width:92%;background:rgba(0,0,0,0.95);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <h2 id="round-summary-title">Round Result</h2>
-            <p id="round-summary-body">Submissions: <strong id="round-summary-taps">0</strong></p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
-                <button class="btn-menu" onclick="App.confirmRoundResult('punish')">Apply Punishment</button>
-                <button class="btn-reset" onclick="App.confirmRoundResult('escaped')">Mark Escaped</button>
-                <button class="btn-safety" onclick="App.confirmRoundResult('survived')">Mark Survived</button>
-                <button class="btn-quit" onclick="App.confirmRoundResult('quit')">I Quit (Big Punishment)</button>
-                <button class="btn-reset" onclick="document.getElementById('round-summary').style.display='none'">Cancel</button>
+    <div id="summary-overlay" class="hidden">
+        <div id="credits-container">
+            <h1 class="credits-header">MATCH HIGHLIGHTS</h1>
+            <div id="credits-roll"></div>
+            <div class="credits-footer">
+                <h2 id="final-winner">THE GODDESS REIGNS</h2>
+                <button onclick="location.reload()">NEW RITUAL</button>
             </div>
         </div>
     </div>
 
-    <!-- Submission Duel Modal (for SUBMISSION stip) -->
-    <div id="submission-duel" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="max-width:92%;background:rgba(0,0,0,0.95);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <h2 id="submission-duel-title">Submission Duel</h2>
-            <p id="submission-duel-sub">Trade submissions until someone yields. Refusals before forced submission: <span id="duel-refusals">0</span>/<span id="duel-max">3</span></p>
-            <p id="duel-pressurer" style="font-weight:700;color:#ffd;margin-bottom:6px;">Pressuring: <span id="duel-pressurer-name">WAYNE</span></p>
-            <p id="submission-duel-prompt" style="font-style:italic;color:#ffd;">Suggested phrase: <strong id="submission-duel-phrase">Say "I'm yours"</strong></p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
-                <button class="btn-quit" onclick="App.duelSubmit()">I SUBMIT — I'm your submissive</button>
-                <button class="btn-menu" onclick="App.duelSayPhrase()">Say Phrase</button>
-                <button class="btn-reset" onclick="App.duelRefuseContinue()">Refuse / Continue Duel</button>
-                <button class="btn-reset" onclick="document.getElementById('submission-duel').style.display='none'">Cancel Duel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sexfight setup: choose mode and time limit -->
-    <div id="sexfight-setup" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="max-width:420px;background:rgba(0,0,0,0.95);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <h2>Sexfight Setup</h2>
-            <p style="color:#ddd;">Choose a mode and time limit. Minimal referee interaction.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
-                <label style="color:#ddd;"><input type="radio" name="sexf-mode" value="FIRST" checked> First to Orgasm</label>
-                <label style="color:#ddd;"><input type="radio" name="sexf-mode" value="LAST"> Last to Orgasm</label>
-                <label style="color:#ddd;"><input type="radio" name="sexf-mode" value="MOST"> Most Orgasms in Time</label>
-            </div>
-            <div style="margin-top:12px;">
-                <label style="color:#ddd;">Duration (seconds)</label><br>
-                <input type="number" id="sexfight-duration" min="10" max="600" value="60" style="width:90px;padding:8px;margin-top:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;" />
-            </div>
-            <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;">
-                <button class="btn-menu" onclick="App.startSexFight()">START SEXFIGHT</button>
-                <button class="btn-reset" onclick="document.getElementById('sexfight-setup').style.display='none'">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sudden Death setup: both players pick one move; each will perform it, tally taps -->
-    <div id="sudden-death-setup" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="max-width:92%;background:rgba(0,0,0,0.95);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <h2>Sudden Death Moves</h2>
-            <p style="color:#ddd;">Each player selects ONE move that must be performed on their opponent. Highest taps wins.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
-                <div style="min-width:220px;text-align:left;"><label>Wayne's Move</label><br><select id="sd-move-wayne"></select></div>
-                <div style="min-width:220px;text-align:left;"><label>Cindy's Move</label><br><select id="sd-move-cindy"></select></div>
-            </div>
-            <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;">
-                <button class="btn-menu" onclick="App.startSuddenDeath()">START SUDDEN DEATH</button>
-                <button class="btn-reset" onclick="document.getElementById('sudden-death-setup').style.display='none'">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- TWO-OF-THREE judge overlay -->
-    <div id="two-judge" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="max-width:480px;background:rgba(0,0,0,0.95);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <h2>Judge: Who Won This Fall?</h2>
-            <p id="judge-context" style="color:#ddd;">Please select Wayne, Cindy, or Draw.</p>
-            <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
-                <button class="btn-menu" onclick="App.judgePick('wayne')">Wayne</button>
-                <button class="btn-menu" onclick="App.judgePick('cindy')">Cindy</button>
-                <button class="btn-reset" onclick="App.judgePick('draw')">Draw</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Submission Gauntlet Modal (used when match draw) -->
-    <div id="submission-gauntlet" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="max-width:92%;background:rgba(0,0,0,0.95);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <h2>Submission Gauntlet</h2>
-            <p id="gauntlet-desc" style="color:#ddd;">Mutual submission move — both players perform it and highest taps wins.</p>
-            <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;">
-                <button class="btn-menu" onclick="App.startSubmissionGauntlet()">BEGIN GAUNTLET</button>
-                <button class="btn-reset" onclick="document.getElementById('submission-gauntlet').style.display='none'">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    </div> <!-- .page-container -->
-
-
-
-    <script>
-        // Script loader tracker: records latest onload/onerror per script to debug mobile issues
-        window.__scriptLoadInfo = window.__scriptLoadInfo || {};
-        function updateStartButton(){
-            const startBtn = document.querySelector('#start-screen .btn-menu');
-            if(!startBtn) return;
-            // Required scripts for the app to function
-            const required = ['JS/moves.js','JS/secrets.js','JS/mechanics.js'];
-            let disabled = false;
-            for (const r of required) {
-                const status = (window.__scriptLoadInfo || {})[r];
-                // If a required script is missing or reported an error, disable start
-                if (!status || status === 'error') { disabled = true; break; }
-            }
-            // Also ensure App.init is present before enabling
-            if (!window.App || typeof App.init !== 'function') disabled = true;
-            startBtn.disabled = disabled;
-            console.info('Start button enabled:', !disabled);
-        }
-        function __recordScript(name, status){
-            try{
-                // Keep latest status per script name
-                window.__scriptLoadInfo = window.__scriptLoadInfo || {};
-                window.__scriptLoadInfo[name] = status;
-                var pre = document.getElementById('error-pre');
-                if(pre){
-                    var lines = Object.keys(window.__scriptLoadInfo).map(k => k + ': ' + window.__scriptLoadInfo[k]);
-                    pre.textContent = 'Script load events:\n' + lines.join('\n') + '\n\n' + (pre.textContent || '');
-                    var details = document.getElementById('error-log'); if(details) details.style.display = 'block';
-                }
-                console.info('Script loader:', name, status);
-                // Update start button state after each script report
-                setTimeout(updateStartButton, 50);
-            }catch(e){ console.warn('Script record failed', e); }
-        }
-        // Also expose a safe-start wrapper to capture errors and show them on the start screen
-        window.safeStart = function(){
-            const errEl = document.getElementById('load-error');
-            try {
-                if (!window.App || typeof App.init !== 'function') throw new Error('App not ready');
-                errEl.style.display = 'none';
-                App.init();
-            } catch(err) {
-                console.error('Start failed', err);
-                if (errEl) { errEl.style.display = 'block'; errEl.innerText = 'Start failed: ' + (err && err.message ? err.message : 'unknown error') + '. Check console for details.'; }
-                return;
-            }
-        };
-
-        // Run an initial check in case scripts already reported
-        setTimeout(updateStartButton, 100);
-    </script>
-
-    <!-- Diagnostic panel (visit with ?diag=1 to auto-show and run checks) -->
-    <div id="diag-panel" style="display:none;position:fixed;bottom:12px;left:12px;right:12px;z-index:900;background:rgba(0,0,0,0.9);color:#fff;padding:12px;border-radius:8px;max-height:50vh;overflow:auto;font-family:monospace;white-space:pre-wrap;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong>Diagnostic</strong><div><button id="diag-accept-start" class="btn-menu" style="display:none;margin-right:8px;">Accept & Start</button><button onclick="document.getElementById('diag-panel').style.display='none'" class="btn-reset">Close</button></div></div>
-    </div>
-
-    <!-- Toast/Undo: transient small notification -->
-    <div id="toast" class="toast" aria-live="polite" role="status" style="display:none;">
-        <div class="toast-body">
-            <span id="toast-msg">Advanced settings reset.</span>
-            <button id="toast-undo" class="btn-reset">Undo</button>
-        </div>
-    </div>
-        <pre id="diag-pre" style="color:#ddd;font-size:0.9rem"></pre>
-    </div>
-    <script>
-    (function(){
-        function runDiag(){
-            const results = [];
-            try{ results.push('Script load events:\n' + JSON.stringify(window.__scriptLoadInfo || [], null, 2)); } catch(e){ results.push('Script events: ERROR'); }
-            try{ results.push('App present: ' + (typeof window.App !== 'undefined')); } catch(e){ results.push('App present: ERROR'); }
-            try{ results.push('App.init is function: ' + (typeof (window.App && window.App.init) === 'function')); } catch(e){ results.push('App.init: ERROR'); }
-            try{ results.push('Start button disabled: ' + (!!(document.querySelector('#start-screen .btn-menu') && document.querySelector('#start-screen .btn-menu').disabled))); } catch(e){ results.push('Start button check: ERROR'); }
-            try{ results.push('Match intensity: ' + ((window.App && App.state && App.state.intensity) ? App.state.intensity : 'NORMAL')); } catch(e){ results.push('Match intensity: ERROR'); }
-            try{ results.push('ServiceWorker controlled: ' + (!!navigator.serviceWorker && !!navigator.serviceWorker.controller)); } catch(e){ results.push('ServiceWorker: ERROR'); }
-            try{ results.push('Manifest href: ' + (document.querySelector('link[rel="manifest"]') ? document.querySelector('link[rel="manifest"]').href : 'missing')); } catch(e){ results.push('Manifest: ERROR'); }
-            try{ document.getElementById('diag-pre').textContent = results.join('\n\n'); document.getElementById('diag-panel').style.display = 'block'; } catch(e){ console.warn('Diag display failed', e); }
-        }
-        if (location.search && location.search.indexOf('diag=1') !== -1) { window.addEventListener('load', runDiag); }
-        // expose for manual run
-        window.runUCWDiag = runDiag;
-
-        // Diagnostics helper now shows intensity; no accept flow required (consent removed)
-        (function(){
-            const origRun = window.runUCWDiag;
-            window.runUCWDiag = function(){ origRun && origRun(); try{ const intensity = (window.App && App.state && App.state.intensity) ? App.state.intensity : 'NORMAL'; const btn = document.getElementById('diag-accept-start'); if (btn) btn.style.display = 'none'; } catch(e){} };
-        })();
-    })();
-    </script>
-
-    <script src="JS/moves.js" onload="__recordScript('JS/moves.js','ok')" onerror="__recordScript('JS/moves.js','error')"></script>
-    <script src="JS/secrets.js" onload="__recordScript('JS/secrets.js','ok')" onerror="__recordScript('JS/secrets.js','error')"></script>
-    <script src="JS/mechanics.js" onload="__recordScript('JS/mechanics.js','ok')" onerror="__recordScript('JS/mechanics.js','error')"></script>
-
-    <script>window.onload = function() { try{ App.loadHistory(); }catch(e){ __recordScript('App.init','missing'); console.error('App.loadHistory failed', e); }};</script>
-
-    <!-- Offline banner and service worker update prompt -->
-    <div id="offline-banner" class="offline-banner" style="display:none;">Offline — serving cached content</div>
-    <div id="sw-update" class="sw-update" style="display:none;">A new version is available. <button id="sw-update-btn">Update now</button></div>
-
-    <script>
-    // Service Worker registration + online/offline UI handling
-    (function(){
-        const offlineBanner = document.getElementById('offline-banner');
-        const swUpdate = document.getElementById('sw-update');
-        const swUpdateBtn = document.getElementById('sw-update-btn');
-
-        function updateOnlineStatus(){ if (navigator.onLine) { offlineBanner.style.display = 'none'; } else { offlineBanner.style.display = 'block'; } }
-        window.addEventListener('online', updateOnlineStatus); window.addEventListener('offline', updateOnlineStatus);
-        updateOnlineStatus();
-
-        if ('serviceWorker' in navigator) {
-            // register relative to the current path so it works on GitHub Pages subpaths (e.g., /ucwgame/)
-            navigator.serviceWorker.register('sw.js', { scope: './' }).then(reg => {
-                if (reg.waiting) {
-                    swUpdate.style.display = 'block';
-                }
-                reg.addEventListener('updatefound', () => {
-                    const newWorker = reg.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            swUpdate.style.display = 'block';
-                        }
-                    });
-                });
-            }).catch(err => console.warn('SW registration failed', err));
-
-            // reload to apply new SW when user clicks update
-            swUpdateBtn && swUpdateBtn.addEventListener('click', function(){
-                navigator.serviceWorker.getRegistration().then(function(reg){
-                    if (reg && reg.waiting) { reg.waiting.postMessage({type:'SKIP_WAITING'}); }
-                });
-            });
-
-            // When the new SW takes control, reload so users see new content
-            navigator.serviceWorker.addEventListener('controllerchange', function(){ window.location.reload(); });
-        }
-    })();
-    </script>
-
-    <!-- Runtime loader check + deeper diagnostics for mobile -->
-    <script>
-    (function(){
-        const startBtn = document.querySelector('#start-screen .btn-menu');
-        const errEl = document.getElementById('load-error');
-
-        // Create a collapsible details log so users can see stack traces on mobile
-        let details = document.getElementById('error-log');
-        if(!details){
-            const wrap = document.createElement('div');
-            wrap.innerHTML = '<details id="error-log" style="display:none;margin-top:8px;color:#faa"><summary style="cursor:pointer">View debug details</summary><pre id="error-pre" style="white-space:pre-wrap;color:#ddd;background:rgba(0,0,0,0.25);padding:8px;border-radius:6px;margin-top:8px;max-height:300px;overflow:auto;"></pre></details>';
-            const startScreen = document.getElementById('start-screen');
-            startScreen.appendChild(wrap);
-            details = document.getElementById('error-log');
-        }
-        const pre = document.getElementById('error-pre');
-
-        function showError(msg, detail){
-            // Show concise message and enable details
-            if(errEl){ errEl.style.display = 'block'; errEl.innerText = msg; }
-            if(pre){ pre.textContent = (detail ? detail + '\n\n' : '') + (pre.textContent || ''); details.style.display = 'block'; }
-            if(startBtn){ startBtn.disabled = true; }
-            // Also log to console for remote debugging (use original to avoid recursion)
-            origConsoleError && origConsoleError(msg);
-            if(detail && origConsoleError) origConsoleError(detail);
-        }
-
-        // Global error handlers to capture runtime issues (works without DevTools)
-        window.addEventListener('error', function(e){
-            try {
-                const d = (e.filename ? (e.filename+ ':' + e.lineno + ':' + e.colno + '\n') : '') + (e.error && e.error.stack ? e.error.stack : e.message);
-                showError('Runtime error: ' + e.message, d);
-            } catch (ex) { showError('Runtime error occurred.'); }
-        });
-
-        window.addEventListener('unhandledrejection', function(e){
-            try {
-                const reason = e.reason && (e.reason.message || JSON.stringify(e.reason)) || 'Unknown';
-                const stack = e.reason && e.reason.stack ? e.reason.stack : '';
-                showError('Unhandled promise rejection: ' + reason, stack);
-            } catch(ex) { showError('Unhandled promise rejection occurred.'); }
-        });
-
-        // Wrap console.error with dedupe + ignore rules to avoid flooding the on-page log
-        const origConsoleError = console.error && console.error.bind(console);
-        let lastConsoleMsg = null;
-        let consoleRepeatCount = 0;
-        console.error = function(...args){
-            try {
-                origConsoleError && origConsoleError(...args);
-                const text = args.map(a => {
-                    try { return (typeof a === 'string' ? a : JSON.stringify(a)); } catch(e) { return String(a); }
-                }).join(' ');
-
-                // Ignore messages that clearly originate from our own logging wrapper
-                if (text.startsWith('Console:')) return;
-
-                // Dedupe repeated messages to avoid spam
-                if (text === lastConsoleMsg) {
-                    consoleRepeatCount++;
-                    if (pre) {
-                        // Update the first line to show repetition count
-                        const top = `Last console message: ${text} (x${consoleRepeatCount})`;
-                        const rest = (pre.textContent || '').split('\n\n').slice(1).join('\n\n');
-                        pre.textContent = top + '\n\n' + rest;
-                        details.style.display = 'block';
-                    }
-                    return;
-                }
-
-                // New message
-                lastConsoleMsg = text;
-                consoleRepeatCount = 1;
-                if (pre) { pre.textContent = 'Last console message: ' + text + '\n\n' + (pre.textContent || ''); details.style.display = 'block'; }
-            } catch(e){ origConsoleError && origConsoleError('Console hook failed', e); }
-        };
-
-        // Deep diagnostics when App is missing
-        function probeScripts(scripts){
-            const results = [];
-            const seq = scripts.reduce((p, s) => p.then(() => fetch(s).then(r => r.text().then(t => ({src:s, ok:r.ok, status:r.status, type:r.headers.get('content-type'), snippet: t.slice(0,800)})).catch(e => ({src:s, ok:false, status:'network error', err: String(e)}))).catch(e => ({src:s, ok:false, status:'fetch failed', err:String(e)}))), Promise.resolve());
-            return seq;
-        }
-
-        if(!window.App || typeof window.App.init !== 'function'){
-            const scripts = ['JS/moves.js', 'JS/secrets.js', 'JS/mechanics.js'];
-            // First do HEAD checks
-            Promise.all(scripts.map(s => fetch(s, { method: 'HEAD' }).then(r => ({src: s, ok: r.ok, status: r.status})).catch(e => ({src: s, ok: false, status: 'network error'}))))
-            .then(results => {
-                const missing = results.filter(r => !r.ok);
-                if(missing.length){
-                    showError('Loading error: missing script(s): ' + missing.map(m=>m.src+ ' ('+m.status+')').join(', ')+'. Check file paths and casing.');
-                    if(pre) pre.textContent = 'HEAD check results:\n' + JSON.stringify(results, null, 2) + '\n\n' + (pre.textContent || '');
-                    return;
-                }
-                // If all HEADs ok, fetch full files to inspect content (detect HTML 200 pages, gzips, etc.)
-                Promise.all(scripts.map(s => fetch(s).then(r => r.text().then(t => ({src:s, status:r.status, ok:r.ok, type:r.headers.get('content-type'), snippet: t.slice(0,1200)})).catch(e => ({src:s, ok:false, err:String(e)}))).catch(e => ({src:s, ok:false, err:String(e)}))))
-                .then(full => {
-                    // Show brief script tag DOM info
-                    const scriptTags = Array.from(document.querySelectorAll('script')).map(el => ({src: el.getAttribute('src'), async: el.async, defer: el.defer}));
-                    if(pre) pre.textContent = 'Script tags on page:\n' + JSON.stringify(scriptTags, null, 2) + '\n\nFetch results:\n' + JSON.stringify(full, null, 2) + '\n\n' + (pre.textContent || '');
-
-                    // If content looks like HTML rather than JS, warn
-                    const htmlLike = full.filter(f => f.ok && f.type && f.type.indexOf('text/html') !== -1);
-                    if(htmlLike.length){
-                        showError('Scripts returned HTML (likely 404 page). Check file paths and casing.', JSON.stringify(htmlLike, null, 2));
-                        return;
-                    }
-
-                    // If scripts fetched ok but App still missing, maybe execution was blocked; show message
-                    showError('All scripts fetched successfully but App is not present. There may be a runtime error during parsing/execution. Check debug details for snippets and ensure no CSP or content transformations are happening.');
-                });
-            }).catch(e => showError('Error while probing scripts: ' + String(e), String(e)));
-        }
-
-        // Also display basic environment info
-        try{
-            const nav = navigator.userAgent + ' | platform:' + navigator.platform + ' | vendor:' + navigator.vendor;
-            if(pre) pre.textContent = 'Environment:\n' + nav + '\n\n' + (pre.textContent || '');
-        }catch(e){}
-    })();
-    </script>
+    <script src="moves.js"></script>
+    <script src="mechanics.js"></script>
 </body>
 </html>
