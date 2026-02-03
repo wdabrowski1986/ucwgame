@@ -39,8 +39,22 @@ const App = {
         skipCount: 0,
         // Configurable per-round caps and thresholds
         maxSkipsPerRound: 3,
-        tapThresholds: { medium: 3, big: 8 }
+        tapThresholds: { medium: 3, big: 8 },
+        // Submission duel state
+        inSubmissionDuel: false,
+        duelRefusals: 0,
+        duelMaxRefusals: 3,
+        duelPhrase: null
     },
+
+    // Phrases used in Submission Duel
+    submissionPhrases: [
+        "I submit to you.",
+        "I'm yours.",
+        "I'm your submissive.",
+        "You're my master.",
+        "I belong to you."
+    ],
 
     // --- ROUND & TAP HELPERS ---
     // Return action time seconds based on intensity mapping
@@ -112,6 +126,13 @@ const App = {
         if (taps >= big) sev = 'BIG';
         else if (taps >= med) sev = 'MEDIUM';
         this.announce(`Applying ${sev} punishment based on ${taps} submissions.`, 'high');
+        // If this is a Submission stipulation, start a Submission Duel instead of immediate punishment
+        if (this.state.stipulation === 'SUBMISSION') {
+            this.startSubmissionDuel();
+            // reset local tap counter (duel will manage further outcomes)
+            this.state.tapCount = 0; const tEl = document.getElementById('tap-count'); if (tEl) tEl.innerText = '0';
+            return;
+        }
         this.applyPunishmentBySeverity(sev);
         // Reset tap counter after applying punishment
         this.state.tapCount = 0; const tEl = document.getElementById('tap-count'); if (tEl) tEl.innerText = '0';
@@ -126,6 +147,91 @@ const App = {
         this.state.tapCount = 999; // sentinel for quit
         this.confirmRoundResult('quit');
     },
+
+    // --- SUBMISSION DUEL HANDLERS ---
+    startSubmissionDuel: function() {
+        // Cancel timers and prepare duel
+        try { clearTimeout(this.state.timer); } catch(e) {}
+        try { this.stopCountdown(); } catch(e) {}
+        this.state.inSubmissionDuel = true;
+        this.state.duelRefusals = 0;
+        const idx = Math.floor(Math.random() * this.submissionPhrases.length);
+        this.state.duelPhrase = this.submissionPhrases[idx];
+        // Update UI
+        const el = document.getElementById('submission-duel'); if (el) el.style.display = 'flex';
+        const pEl = document.getElementById('submission-duel-phrase'); if (pEl) pEl.innerText = JSON.stringify(this.state.duelPhrase).replace(/"/g,'');
+        const dEl = document.getElementById('duel-refusals'); if (dEl) dEl.innerText = this.state.duelRefusals;
+        const mEl = document.getElementById('duel-max'); if (mEl) mEl.innerText = this.state.duelMaxRefusals;
+        document.body.classList.add('overlay-open');
+        this.announce('Submission Duel started! Pressure the defender to yield.', 'high');
+    },
+
+    endSubmissionDuel: function() {
+        this.state.inSubmissionDuel = false;
+        this.state.duelRefusals = 0; this.state.duelPhrase = null;
+        const el = document.getElementById('submission-duel'); if (el) el.style.display = 'none';
+        document.body.classList.remove('overlay-open');
+    },
+
+    duelSubmit: function() {
+        // Defender submits (or confirms phrase) -> immediate BIG punishment
+        this.endSubmissionDuel();
+        this.announce('Submission accepted — BIG punishment incoming!', 'high');
+        this.applyPunishmentBySeverity('BIG');
+    },
+
+    duelSayPhrase: function() {
+        // Prompt to confirm whether phrase was said as part of the duel
+        try {
+            const phrase = this.state.duelPhrase || this.submissionPhrases[Math.floor(Math.random() * this.submissionPhrases.length)];
+            const ok = confirm(`Say aloud: "${phrase}"\n\nDid they say it? (OK = yes, Cancel = no)`);
+            if (ok) { this.duelSubmit(); return; }
+            this.duelRefuseContinue();
+        } catch(e) { console.warn('duelSayPhrase failed', e); this.duelRefuseContinue(); }
+    },
+
+    duelRefuseContinue: function() {
+        this.state.duelRefusals = (this.state.duelRefusals || 0) + 1;
+        const dEl = document.getElementById('duel-refusals'); if (dEl) dEl.innerText = this.state.duelRefusals;
+        if (this.state.duelRefusals >= (this.state.duelMaxRefusals || 3)) {
+            this.announce('Refusals exceeded — forcing submission!', 'high');
+            this.duelSubmit();
+            return;
+        }
+        this.announce('Refused — pressure continues. Re-rolling next submission move.', 'normal');
+        this.rerollDuelMove();
+    },
+
+    rerollDuelMove: function() {
+        // Similar to skip re-roll but avoids consuming skip counters
+        const att = this.state.attacker;
+        const oppHealth = att === 'wayne' ? this.state.p2Health : this.state.p1Health;
+        let deck;
+        if (oppHealth < (0.25 * this.state.maxHealth)) {
+            deck = DATA[att].finishers; this.state.isFinisher = true; document.body.style.background = "#200";
+        } else {
+            deck = [...DATA.general, ...DATA[att].moves]; this.state.isFinisher = false; document.body.style.background = "#000000";
+        }
+        const move = deck[Math.floor(Math.random() * deck.length)];
+        this.state.currentCard = move;
+        // Update UI image and start a short setup for the duel move
+        const img = document.getElementById('main-image');
+        const self = this;
+        img.onload = function() { this.classList.add('main-visible'); this.onclick = function(e){ e.stopPropagation(); self.toggleImageZoom(); }; };
+        img.onerror = function() { this.onerror = null; this.src = `https://placehold.co/600x400/111/fff?text=${encodeURIComponent(move.name)}`; this.classList.add('main-visible'); this.onclick = function(e){ e.stopPropagation(); self.toggleImageZoom(); }; };
+        img.src = move.img; img.style.display = 'block';
+
+        this.state.isSetupPhase = true;
+        document.getElementById('controls-area').style.opacity = '0.5';
+        const setupSec = this.state.setupDelaySeconds || 5;
+        const bar2 = document.getElementById('timer-fill');
+        bar2.style.transition = 'none'; bar2.style.width = '100%'; bar2.style.background = 'yellow'; void bar2.offsetWidth; bar2.style.transition = `width ${setupSec}s linear`; bar2.style.width = '0%';
+        this.startCountdown(setupSec);
+        try { clearTimeout(this.state.timer); } catch(e) {}
+        this.state.timer = setTimeout(() => {
+            this.stopCountdown(); this.state.isSetupPhase = false; document.getElementById('controls-area').style.opacity = '1'; document.getElementById('btn-success').disabled = false; this.announce('Continue Submission Duel — action!', 'high'); document.getElementById('sub-text').innerText = move.desc; const actionTime = this.state.isFinisher ? 15 : 45; this.startActionTimer(actionTime);
+        }, setupSec * 1000);
+    }
 
     applyPunishmentBySeverity: function(sev) {
         // Map severity to punishment categories (fallback to any allowed category)

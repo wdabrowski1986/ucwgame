@@ -187,6 +187,21 @@
         </div>
     </div>
 
+    <!-- Submission Duel Modal (for SUBMISSION stip) -->
+    <div id="submission-duel" class="overlay" style="display:none;align-items:center;justify-content:center;padding:20px;">
+        <div style="max-width:92%;background:rgba(0,0,0,0.95);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center;">
+            <h2 id="submission-duel-title">Submission Duel</h2>
+            <p id="submission-duel-sub">Trade submissions until someone yields. Refusals before forced submission: <span id="duel-refusals">0</span>/<span id="duel-max">3</span></p>
+            <p id="submission-duel-prompt" style="font-style:italic;color:#ffd;">Suggested phrase: <strong id="submission-duel-phrase">Say "I'm yours"</strong></p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
+                <button class="btn-quit" onclick="App.duelSubmit()">I SUBMIT — I'm your submissive</button>
+                <button class="btn-menu" onclick="App.duelSayPhrase()">Say Phrase</button>
+                <button class="btn-reset" onclick="App.duelRefuseContinue()">Refuse / Continue Duel</button>
+                <button class="btn-reset" onclick="document.getElementById('submission-duel').style.display='none'">Cancel Duel</button>
+            </div>
+        </div>
+    </div>
+
     </div> <!-- .page-container -->
 
 
