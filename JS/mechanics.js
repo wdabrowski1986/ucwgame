@@ -603,6 +603,12 @@ const App = {
             const sw = document.getElementById('stake-wayne'); if (sw) sw.value = this.state.stakes.wayne;
             const sc = document.getElementById('stake-cindy'); if (sc) sc.value = this.state.stakes.cindy;
         }
+
+        // Load Gauntlet turn length if present
+        if (typeof cfg.twoOfThreeRoundSeconds !== 'undefined') {
+            this.state.twoOfThreeRoundSeconds = parseInt(cfg.twoOfThreeRoundSeconds, 10) || this.state.twoOfThreeRoundSeconds;
+            const gs = document.getElementById('gauntlet-seconds'); if (gs) gs.value = this.state.twoOfThreeRoundSeconds;
+        }
     },
 
     saveSettings: function() {
@@ -622,7 +628,8 @@ const App = {
                 stakes: {
                     wayne: (document.getElementById('stake-wayne') ? (document.getElementById('stake-wayne').value || '') : (this.state.stakes ? this.state.stakes.wayne : '')),
                     cindy: (document.getElementById('stake-cindy') ? (document.getElementById('stake-cindy').value || '') : (this.state.stakes ? this.state.stakes.cindy : ''))
-                }
+                },
+                twoOfThreeRoundSeconds: (document.getElementById('gauntlet-seconds') ? parseInt(document.getElementById('gauntlet-seconds').value, 10) : this.state.twoOfThreeRoundSeconds)
             };
             localStorage.setItem('ubc_settings', JSON.stringify(cfg));
         } catch(e) { console.warn('saveSettings failed', e); }
@@ -760,6 +767,10 @@ const App = {
         const stakeC = document.getElementById('stake-cindy');
         if (stakeW) { stakeW.addEventListener('input', (e) => { this.state.stakes = this.state.stakes || {}; this.state.stakes.wayne = e.target.value.slice(0,240); this.saveSettings(); }); }
         if (stakeC) { stakeC.addEventListener('input', (e) => { this.state.stakes = this.state.stakes || {}; this.state.stakes.cindy = e.target.value.slice(0,240); this.saveSettings(); }); }
+
+        // Wire gauntlet seconds input to state and persist
+        const gaunt = document.getElementById('gauntlet-seconds');
+        if (gaunt) { gaunt.addEventListener('input', (e) => { this.state.twoOfThreeRoundSeconds = Math.max(3, parseInt(e.target.value, 10) || 10); this.saveSettings(); }); }
 
         // Wire long-press resume button on the safeword overlay to avoid accidental resume
         const resumeBtn = document.getElementById('btn-resume');
