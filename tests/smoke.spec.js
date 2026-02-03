@@ -4,13 +4,10 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const WORKER_INDEX = process.env.PLAYWRIGHT_WORKER_INDEX ? parseInt(process.env.PLAYWRIGHT_WORKER_INDEX, 10) : 0;
-const PORT = 8080 + WORKER_INDEX;
-const BASE = `http://127.0.0.1:${PORT}`;
-
+let BASE;
 let server;
 
-function startStaticServer(root, port){
+function startStaticServer(root){
   const mime = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.png':'image/png', '.jpg':'image/jpeg', '.json':'application/json' };
   server = http.createServer((req, res) => {
     let reqPath = req.url.split('?')[0];
@@ -24,13 +21,13 @@ function startStaticServer(root, port){
       res.end(data);
     });
   });
-  return new Promise((resolve, reject) => server.listen(port, '127.0.0.1', () => resolve(server)));
+  return new Promise((resolve, reject) => server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port })));
 }
 
 async function stopStaticServer(){ if (server) await new Promise(r => server.close(r)); }
 
 test.describe('smoke', () => {
-  test.beforeAll(async () => { await startStaticServer(ROOT, PORT); });
+  test.beforeAll(async () => { const s = await startStaticServer(ROOT); BASE = `http://127.0.0.1:${s.port}`; server = s.server; });
   test.afterAll(async () => { await stopStaticServer(); });
 
   test('basic smoke: load app, start match, start sexfight, no console errors', async ({ page }) => {

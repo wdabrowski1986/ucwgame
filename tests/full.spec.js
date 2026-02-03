@@ -4,12 +4,10 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const WORKER_INDEX = process.env.PLAYWRIGHT_WORKER_INDEX ? parseInt(process.env.PLAYWRIGHT_WORKER_INDEX, 10) : 0;
-const PORT = 8080 + WORKER_INDEX;
-const BASE = `http://127.0.0.1:${PORT}`;
+let BASE;
 let server;
 
-function startStaticServer(root, port){
+function startStaticServer(root){
   const mime = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.png':'image/png', '.jpg':'image/jpeg', '.json':'application/json' };
   server = http.createServer((req, res) => {
     let reqPath = req.url.split('?')[0];
@@ -23,14 +21,14 @@ function startStaticServer(root, port){
       res.end(data);
     });
   });
-  return new Promise((resolve, reject) => server.listen(port, '127.0.0.1', () => resolve(server)));
+  return new Promise((resolve, reject) => server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port })));
 }
 async function stopStaticServer(){ if (server) await new Promise(r => server.close(r)); }
 
 // Keep console error logs for each test
 let errors = [];
 
-test.beforeAll(async () => { await startStaticServer(ROOT, PORT); });
+test.beforeAll(async () => { const s = await startStaticServer(ROOT); BASE = `http://127.0.0.1:${s.port}`; server = s.server; });
 test.afterAll(async () => { await stopStaticServer(); });
 
 test.beforeEach(async ({ page }) => {
@@ -69,10 +67,13 @@ test('sexfight tiebreaker and winner', async ({ page }) => {
   // Open sexfight setup and configure MOST mode with short duration
   await page.evaluate(() => { try { App.openSexFightSetup(); } catch(e){ console.warn('openSexFightSetup failed', e); } });
   await page.waitForSelector('#sexfight-setup', { state: 'visible' });
-  await page.selectOption('input[name="sexf-mode"]', 'MOST').catch(()=>{});
-  await page.fill('#sexfight-duration', '2');
-  // Start sexfight via API to avoid overlay click issues
-  await page.evaluate(() => { try { App.startSexFight(); } catch(e){ console.warn('startSexFight failed', e); } });
+  // Configure MOST mode + small duration by manipulating DOM directly
+  await page.evaluate(() => {
+    const mode = document.querySelector('input[name="sexf-mode"][value="MOST"]');
+    if (mode) mode.checked = true;
+    const dur = document.getElementById('sexfight-duration'); if (dur) dur.value = '2';
+    try { App.startSexFight(); } catch(e){ console.warn('startSexFight failed', e); }
+  });
   await page.waitForSelector('#sexfight-hud', { state: 'visible' });
   // Simulate simultaneous orgasms to create tie
   await page.evaluate(() => { App.orgasm('wayne'); App.orgasm('cindy'); });
@@ -94,7 +95,8 @@ test('advanced settings persistence', async ({ page }) => {
   await page.goto(BASE, { waitUntil: 'load' });
   // Open advanced panel
   await page.click('#toggle-advanced');
-  await page.waitForSelector('#advanced-settings', { state: 'visible' });
+  // The advanced panel toggles hidden + animated class; wait for it to be expanded
+  await page.waitForSelector('#advanced-settings:not([hidden]), #advanced-settings.advanced-expanded', { timeout: 5000 });
   // Change gauntlet seconds
   await page.fill('#gauntlet-seconds', '14');
   // Trigger save (App.saveSettings is called on start; call it directly)
