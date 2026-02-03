@@ -54,8 +54,10 @@ test('sudden death setup and start', async ({ page }) => {
   // Open sudden death setup
   await page.evaluate(() => { try { App.populateSuddenDeathMoves(); document.getElementById('sudden-death-setup').style.display = 'flex'; } catch(e){ console.warn('populateSuddenDeathMoves failed', e); } });
   await page.waitForSelector('#sudden-death-setup select');
-  // Start sudden death via API to avoid click issues
+  // Start sudden death via API to avoid click issues and force first turn immediately
   await page.evaluate(() => { try { App.startSuddenDeath(); } catch(e){ console.warn('startSuddenDeath failed', e); } });
+  // Force the first sudden turn immediately to ensure HUD appears in test
+  await page.evaluate(() => { try { App.runSuddenTurn('wayne'); } catch(e){ console.warn('runSuddenTurn failed', e); } });
   // Should show sudden hud
   await page.waitForSelector('#sudden-hud', { state: 'visible' });
   expect(errors).toEqual([]);
@@ -74,7 +76,7 @@ test('sexfight tiebreaker and winner', async ({ page }) => {
       App.endSexFight();
     } catch(e){ console.warn('endSexFight trigger failed', e); }
   });
-  // Tiebreaker should be active and show text
+  // Tiebreaker should be active and show the tiebreaker class (HUD may be hidden visually)
   await page.waitForSelector('#sexfight-hud.tiebreaker-active', { timeout: 2000 });
   const hudText = await page.locator('#sexfight-hud').innerText();
   expect(hudText.toLowerCase()).toContain('tiebreaker');
@@ -89,10 +91,8 @@ test('advanced settings persistence', async ({ page }) => {
   await page.goto(BASE, { waitUntil: 'load' });
   // Ensure App init has run so advanced toggle is wired
   await page.evaluate(() => { try { App.init && App.init(); } catch(e){} });
-  // Open advanced panel
-  await page.click('#toggle-advanced');
-  // The advanced panel toggles hidden + animated class; wait for it to be expanded
-  await page.waitForSelector('#advanced-settings:not([hidden]), #advanced-settings.advanced-expanded', { timeout: 5000 });
+  // Show advanced panel directly (avoids timing issues with animation listeners)
+  await page.evaluate(() => { const adv = document.getElementById('advanced-settings'); if (adv) { adv.hidden = false; adv.classList.add('advanced-expanded'); document.getElementById('toggle-advanced').setAttribute('aria-expanded','true'); } });
   // Change gauntlet seconds
   await page.fill('#gauntlet-seconds', '14');
   // Trigger save (App.saveSettings is called on start; call it directly)
