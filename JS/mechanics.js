@@ -570,6 +570,24 @@ const App = {
         } catch(e) { console.warn('showUndoToast failed', e); }
     },
 
+    // --- SEXFIGHT OVERLAY HELPERS ---
+    showSexOverlay: function() {
+        try {
+            const wrap = document.getElementById('sexfight-overlay'); if(!wrap) return;
+            wrap.style.display = 'flex'; // ensure it's in layout
+            // a tick then add visible so transition plays
+            requestAnimationFrame(()=>{ wrap.classList.add('visible'); });
+        } catch(e) { console.warn('showSexOverlay failed', e); }
+    },
+    hideSexOverlay: function() {
+        try {
+            const wrap = document.getElementById('sexfight-overlay'); if(!wrap) return;
+            wrap.classList.remove('visible');
+            // remove after transition
+            setTimeout(()=>{ try { wrap.style.display = 'none'; wrap.classList.remove('urgent'); wrap.classList.remove('tiebreaker-active'); } catch(e){} }, 320);
+        } catch(e) { console.warn('hideSexOverlay failed', e); }
+    },
+
     undoResetAdvancedSettings: function() {
         try {
             if (!this._lastAdvancedSnapshot) { this.announce('Nothing to undo.', 'normal'); return; }
@@ -596,6 +614,8 @@ const App = {
             if (this._undoToastTimer) { clearTimeout(this._undoToastTimer); this._undoToastTimer = null; }
         } catch(e) { console.warn('undoResetAdvancedSettings failed', e); }
     },
+
+
 
     // --- INITIALIZATION ---
     loadHistory: function() {
@@ -964,11 +984,11 @@ const App = {
                 const el = document.getElementById('sexfight-countdown'); if (el) el.innerText = rem + 's';
                 // Also update centered overlay
                 const overlay = document.getElementById('sexfight-overlay-count'); if (overlay) overlay.innerText = rem + 's';
-                const overlayWrap = document.getElementById('sexfight-overlay'); if (overlayWrap) { overlayWrap.style.display = 'flex'; if (rem <= 10) overlay.classList.add('urgent'); else overlay.classList.remove('urgent'); }
+                const overlayWrap = document.getElementById('sexfight-overlay'); if (overlayWrap) { if (!overlayWrap.classList.contains('visible')) this.showSexOverlay(); if (rem <= 10) overlay.classList.add('urgent'); else overlay.classList.remove('urgent'); }
                 if (rem <= 0) {
                     clearInterval(this.state._sexfCountdownInterval); this.state._sexfCountdownInterval = null;
                     // hide overlay once the timed session has ended (unless tiebreaker is activated separately)
-                    try { const overlayWrap2 = document.getElementById('sexfight-overlay'); if (overlayWrap2) { overlayWrap2.style.display = 'none'; overlayWrap2.classList.remove('urgent'); } } catch(e) {}
+                    try { this.hideSexOverlay(); } catch(e) {}
                 }
             } catch(e) { }
         }, 250);
@@ -1008,6 +1028,8 @@ const App = {
                     try { this.stopCountdown(); } catch(e) {}
                     try { if (this.state._sexfCountdownInterval) { clearInterval(this.state._sexfCountdownInterval); this.state._sexfCountdownInterval = null; } } catch(e) {}
                     const hud = document.getElementById('sexfight-hud'); if (hud) { hud.innerText = `TIEBREAKER — Next orgasm wins (no time limit)`; hud.classList.add('tiebreaker-active'); }
+                    // Hide the centered overlay with a fade
+                    try { this.hideSexOverlay(); } catch(e) {}
                     return;
                 }
                 const winner = (wLast > cLast) ? 'wayne' : 'cindy'; this.endSexFight(winner); return;
