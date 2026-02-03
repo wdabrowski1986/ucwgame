@@ -946,7 +946,7 @@ const App = {
         try { document.getElementById('sexfight-setup').style.display = 'none'; document.body.classList.remove('overlay-open'); } catch(e) {}
         const modeEl = document.querySelector('input[name="sexf-mode"]:checked'); const durEl = document.getElementById('sexfight-duration');
         const mode = modeEl ? modeEl.value : 'MOST'; const dur = durEl ? Math.max(10, parseInt(durEl.value, 10) || 60) : 60;
-        this.state.sexfight = { mode: mode, duration: dur, tally: { wayne:0, cindy:0 }, timestamps: { wayne:[], cindy:[] }, started: true, startTime: Date.now() };
+        this.state.sexfight = { mode: mode, duration: dur, tally: { wayne:0, cindy:0 }, timestamps: { wayne:[], cindy:[] }, started: true, startTime: Date.now(), tiebreaker: false };
         // Show HUD & enable orgasm buttons
         const hud = document.getElementById('sexfight-hud'); if (hud) { hud.style.display = 'block'; hud.innerText = `${mode} — Time ${dur}s — Wayne: 0 • Cindy: 0`; }
         try { document.getElementById('btn-orgasm-wayne').style.display = 'inline-block'; document.getElementById('btn-orgasm-cindy').style.display = 'inline-block'; } catch(e) {}
@@ -967,6 +967,8 @@ const App = {
         this.state.sexfight.timestamps[player].push(now);
         this.updateSexFightHUD();
         this.vibrate([40], true);
+        // Tiebreaker immediate win: if currently in tiebreaker, next orgasm wins
+        if (this.state.sexfight.tiebreaker) { this.endSexFight(player); return; }
         // Mode-specific immediate resolutions
         if (this.state.sexfight.mode === 'FIRST') {
             // First orgasm wins immediately
@@ -979,7 +981,16 @@ const App = {
             const cts = this.state.sexfight.timestamps.cindy || [];
             if (wts.length > 0 && cts.length > 0) {
                 const wLast = wts[wts.length-1]; const cLast = cts[cts.length-1];
-                if (wLast === cLast) { this.announce('Simultaneous orgasm — draw!', 'normal'); this.endSexFight(null); return; }
+                if (wLast === cLast) {
+                    // Simultaneous; start tiebreaker sudden-death
+                    this.announce('Simultaneous orgasm — Tiebreaker: next orgasm wins (no time limit).', 'high');
+                    this.state.sexfight.tiebreaker = true;
+                    // Disable any timers and keep buttons active
+                    try { if (this.state._sexfTimer) { clearTimeout(this.state._sexfTimer); this.state._sexfTimer = null; } } catch(e) {}
+                    try { this.stopCountdown(); } catch(e) {}
+                    const hud = document.getElementById('sexfight-hud'); if (hud) hud.innerText = `TIEBREAKER — Next orgasm wins (no time limit)`;
+                    return;
+                }
                 const winner = (wLast > cLast) ? 'wayne' : 'cindy'; this.endSexFight(winner); return;
             }
         }
@@ -1011,7 +1022,21 @@ const App = {
         // Cleanup UI
         try { document.getElementById('sexfight-hud').style.display = 'none'; document.getElementById('btn-orgasm-wayne').style.display = 'none'; document.getElementById('btn-orgasm-cindy').style.display = 'none'; } catch(e) {}
         this.state.sexfight = null;
-        if (!resolvedWinner) { this.announce('Sexfight ended in a draw.', 'normal'); return; }
+        if (!resolvedWinner) {
+            // Tie -> start sudden-death tiebreaker: next orgasm wins (no time limit)
+            if (s && !s.tiebreaker) {
+                this.announce('Sexfight tied — Tiebreaker: next orgasm wins (no time limit).', 'high');
+                s.tiebreaker = true;
+                // Ensure no active timers
+                try { if (this.state._sexfTimer) { clearTimeout(this.state._sexfTimer); this.state._sexfTimer = null; } } catch(e) {}
+                try { this.stopCountdown(); } catch(e) {}
+                try { const hud = document.getElementById('sexfight-hud'); if (hud) hud.innerText = `TIEBREAKER — Next orgasm wins (no time limit)`; } catch(e) {}
+                // Keep orgasm buttons visible and wait
+                try { document.getElementById('btn-orgasm-wayne').style.display = 'inline-block'; document.getElementById('btn-orgasm-cindy').style.display = 'inline-block'; } catch(e) {}
+                return;
+            }
+            this.announce('Sexfight ended in a draw.', 'normal'); return;
+        }
         this.announce(`Sexfight winner: ${resolvedWinner.toUpperCase()}! Stakes apply.`, 'win');
         const loser = (resolvedWinner === 'wayne') ? 'cindy' : 'wayne';
         // Apply BIG punishment to loser and end match
