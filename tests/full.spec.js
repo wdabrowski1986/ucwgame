@@ -81,8 +81,8 @@ test('sexfight tiebreaker and winner', async ({ page }) => {
   expect(hudText.toLowerCase()).toContain('tiebreaker');
   // Resolve tiebreaker by invoking endSexFight with a winner (ensures deterministic outcome)
   await page.evaluate(() => { try { App.endSexFight('wayne'); } catch(e){ console.warn('endSexFight(winner) failed', e); } });
-  // Winner screen should be visible
-  await page.waitForSelector('#winner-screen', { state: 'visible', timeout: 3000 });
+  // Winner screen should be visible (App.endMatchWithWinner waits a few seconds before showing overlay)
+  await page.waitForSelector('#winner-screen', { state: 'visible', timeout: 7000 });
   expect(errors).toEqual([]);
 });
 
