@@ -1,75 +1,67 @@
-let player1 = { name: "Wayne", hp: 100, st: 100 };
-let player2 = { name: "Cindy", hp: 100, st: 60 };
-let currentAttacker = "Wayne";
-let sensualCombo = 0;
-let isLoveDrunk = false;
-let selectedFinishers = { Wayne: null, Cindy: null };
-let matchHistory = [];
+let winningMove = "";
 
-function executeMove(moveName) {
-    const move = moves.find(m => m.name === moveName);
-    const attacker = (currentAttacker === "Wayne") ? player1 : player2;
-    const defender = (currentAttacker === "Wayne") ? player2 : player1;
+// The Library of Gloating
+const finisherSpeeches = {
+    "ABSOLUTE ZERO": [
+        "How was the view from under there? Looks like you're exactly where you belong.",
+        "Total weight, total silence. That’s the power of the Goddess.",
+        "I’d ask if you could breathe, but I’m too busy enjoying my win."
+    ],
+    "THE MATRIARCH": [
+        "Shh... the Goddess is in control now. Just accept your defeat.",
+        "I told you I’d handle you. Now stay right there and enjoy the view.",
+        "Dominance looks good on me, doesn't it?"
+    ],
+    "THE BLACK WIDOW": [
+        "The more you struggle, the tighter the squeeze. You never had a chance.",
+        "You walked right into my trap. Now you're stuck in my web.",
+        "Caught and conquered. Just the way I like it."
+    ],
+    "THE VENUS TRAP": [
+        "Total engulfment. You completely disappeared into my power.",
+        "There's no escape once you're in this deep, Technician.",
+        "You look so peaceful when you're completely overwhelmed."
+    ]
+};
 
-    // Love-Drunk Logic
-    if (move.type === 'sensual') {
-        sensualCombo++;
-        if (sensualCombo >= 3) isLoveDrunk = true;
-    } else {
-        sensualCombo = 0;
-    }
-
-    let finalDamage = move.damage;
-    if (isLoveDrunk && move.type !== 'sensual') {
-        finalDamage *= 2;
-        isLoveDrunk = false;
-    }
-
-    if (move.type === 'finisher') {
-        triggerVictory();
-        return;
-    }
-
-    // Apply outcome
-    defender.hp -= finalDamage;
-    attacker.st -= (move.staminaCost || 0);
-    matchHistory.push(`${currentAttacker}: ${move.name}`);
+function runVictoryAnimation(move) {
+    winningMove = move.name; // Save the name of the finisher used
+    const hud = document.getElementById('arena-hud');
+    const animLayer = document.getElementById('victory-anim-layer');
     
-    updateUI();
-    showMoveOnTV(move);
+    hud.classList.add('screen-shake');
+    animLayer.classList.remove('hidden');
+
+    setTimeout(() => {
+        hud.classList.remove('screen-shake');
+        showVictoryMenu(); // Transition to Cindy's speech selection
+    }, 4000);
 }
 
-function updateUI() {
-    document.getElementById('hp-w').style.width = player1.hp + "%";
-    document.getElementById('st-w').style.width = player1.st + "%";
-    document.getElementById('hp-c').style.width = player2.hp + "%";
-    document.getElementById('st-c').style.width = player2.st + "%";
+function showVictoryMenu() {
+    const speechMenu = document.getElementById('speech-menu');
+    speechMenu.innerHTML = `<h3>GODDESS, CHOOSE YOUR REMARKS:</h3>`;
     
-    if (isLoveDrunk) document.body.classList.add('love-drunk-mode');
-    else document.body.classList.remove('love-drunk-mode');
+    // Get quotes for the specific move used, or use general quotes if it wasn't a finisher
+    const quotes = finisherSpeeches[winningMove] || ["Better luck next time, mortal!", "The Goddess reigns!"];
 
-    renderRemote();
-}
-
-function renderRemote() {
-    const menu = document.getElementById('remote-menu');
-    menu.innerHTML = '';
-    const opponent = (currentAttacker === "Wayne") ? player2 : player1;
-
-    let available = moves.filter(m => m.attacker === currentAttacker || !m.attacker);
-    
-    // Sudden Death Filter
-    if (opponent.hp > 25) {
-        available = available.filter(m => m.type !== 'finisher');
-    } else {
-        available = available.filter(m => m.type !== 'finisher' || m.name === selectedFinishers[currentAttacker]);
-    }
-
-    available.forEach(m => {
+    quotes.forEach((quote, index) => {
         const btn = document.createElement('button');
-        btn.className = `btn-move ${m.type}`;
-        btn.innerText = m.name;
-        btn.onclick = () => executeMove(m.name);
-        menu.appendChild(btn);
+        btn.className = 'btn-speech';
+        btn.innerText = `Quote ${index + 1}`;
+        btn.onclick = () => {
+            displaySpeechOnTV(quote);
+        };
+        speechMenu.appendChild(btn);
     });
+
+    speechMenu.classList.remove('hidden');
+}
+
+function displaySpeechOnTV(text) {
+    const display = document.getElementById('speech-display');
+    display.innerText = `"${text}"`;
+    display.classList.remove('hidden');
+    document.getElementById('speech-menu').classList.add('hidden');
+    document.getElementById('btn-credits').classList.remove('hidden'); // Show the roll credits button
 }
