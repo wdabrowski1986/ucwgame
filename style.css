@@ -115,6 +115,14 @@ body {
 .settings-row input[type="text"] { width: 100%; max-width:360px; padding:8px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); color:#fff; }
 .small-note { font-size:0.8rem; color:#bbb; margin-left:8px; }
 
+/* Advanced settings panel */
+#advanced-settings { overflow: hidden; transition: max-height 0.32s ease, opacity 0.28s ease; max-height: 0; opacity: 0; }
+#advanced-settings.advanced-expanded { max-height: 800px; opacity: 1; }
+#advanced-settings .settings-row { margin-bottom: 12px; }
+#toggle-advanced { font-size: 0.9rem; padding: 8px 12px; border-radius: 8px; background: transparent; color: #ffd; border: 1px solid rgba(255,255,255,0.06); cursor: pointer; }
+#toggle-advanced:focus { outline: 2px solid rgba(212,175,55,0.4); box-shadow: 0 0 0 4px rgba(212,175,55,0.06); }
+
+
 /* Tooltip for small inline help icons */
 .tooltip { position: relative; display: inline-flex; align-items: center; justify-content: center; width:20px; height:20px; border-radius:50%; background: rgba(255,255,255,0.04); color:#ffd; font-weight:700; cursor:help; border:1px solid rgba(255,255,255,0.03); }
 .tooltip .tooltiptext { visibility: hidden; width: 220px; background: rgba(0,0,0,0.95); color: #fff; text-align: left; border-radius: 6px; padding: 8px 10px; position: absolute; z-index: 500; bottom: 125%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.15s ease, visibility 0.15s ease; box-shadow: 0 6px 18px rgba(0,0,0,0.6); font-size: 0.85rem; }

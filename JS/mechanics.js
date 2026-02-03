@@ -39,6 +39,7 @@ const App = {
         skipCount: 0,
         // TWO_OF_THREE: seconds per gauntlet turn (default 10)
         twoOfThreeRoundSeconds: 10,
+        advancedOpen: false,
         // Configurable per-round caps and thresholds
         maxSkipsPerRound: 3,
         tapThresholds: { medium: 3, big: 8 },
@@ -609,6 +610,13 @@ const App = {
             this.state.twoOfThreeRoundSeconds = parseInt(cfg.twoOfThreeRoundSeconds, 10) || this.state.twoOfThreeRoundSeconds;
             const gs = document.getElementById('gauntlet-seconds'); if (gs) gs.value = this.state.twoOfThreeRoundSeconds;
         }
+        // Load advanced panel open state if present
+        if (typeof cfg.advancedOpen !== 'undefined') {
+            this.state.advancedOpen = !!cfg.advancedOpen;
+            const adv = document.getElementById('advanced-settings'); const tog = document.getElementById('toggle-advanced');
+            if (adv) { if (this.state.advancedOpen) { adv.classList.add('advanced-expanded'); adv.classList.remove('advanced-collapsed'); adv.hidden = false; } else { adv.classList.remove('advanced-expanded'); adv.classList.add('advanced-collapsed'); adv.hidden = true; } }
+            if (tog) tog.setAttribute('aria-expanded', this.state.advancedOpen ? 'true' : 'false');
+        }
     },
 
     saveSettings: function() {
@@ -629,7 +637,8 @@ const App = {
                     wayne: (document.getElementById('stake-wayne') ? (document.getElementById('stake-wayne').value || '') : (this.state.stakes ? this.state.stakes.wayne : '')),
                     cindy: (document.getElementById('stake-cindy') ? (document.getElementById('stake-cindy').value || '') : (this.state.stakes ? this.state.stakes.cindy : ''))
                 },
-                twoOfThreeRoundSeconds: (document.getElementById('gauntlet-seconds') ? parseInt(document.getElementById('gauntlet-seconds').value, 10) : this.state.twoOfThreeRoundSeconds)
+                twoOfThreeRoundSeconds: (document.getElementById('gauntlet-seconds') ? parseInt(document.getElementById('gauntlet-seconds').value, 10) : this.state.twoOfThreeRoundSeconds),
+                advancedOpen: (document.getElementById('advanced-settings') ? !document.getElementById('advanced-settings').hidden : !!this.state.advancedOpen)
             };
             localStorage.setItem('ubc_settings', JSON.stringify(cfg));
         } catch(e) { console.warn('saveSettings failed', e); }
@@ -771,6 +780,22 @@ const App = {
         // Wire gauntlet seconds input to state and persist
         const gaunt = document.getElementById('gauntlet-seconds');
         if (gaunt) { gaunt.addEventListener('input', (e) => { this.state.twoOfThreeRoundSeconds = Math.max(3, parseInt(e.target.value, 10) || 10); this.saveSettings(); }); }
+
+        // Wire advanced toggle
+        const toggleAdvanced = document.getElementById('toggle-advanced');
+        const adv = document.getElementById('advanced-settings');
+        if (toggleAdvanced && adv) {
+            const setAdv = (open) => {
+                this.state.advancedOpen = !!open;
+                toggleAdvanced.setAttribute('aria-expanded', this.state.advancedOpen ? 'true' : 'false');
+                if (this.state.advancedOpen) { adv.hidden = false; adv.classList.add('advanced-expanded'); adv.classList.remove('advanced-collapsed'); toggleAdvanced.innerText = 'Hide Advanced ▴'; }
+                else { adv.hidden = true; adv.classList.remove('advanced-expanded'); adv.classList.add('advanced-collapsed'); toggleAdvanced.innerText = 'Show Advanced ▾'; }
+                this.saveSettings();
+            };
+            // initialize from loaded state (loadSettings() may have set this.state.advancedOpen already)
+            setAdv(!!this.state.advancedOpen);
+            toggleAdvanced.addEventListener('click', () => setAdv(!this.state.advancedOpen));
+        }
 
         // Wire long-press resume button on the safeword overlay to avoid accidental resume
         const resumeBtn = document.getElementById('btn-resume');
