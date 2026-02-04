@@ -224,6 +224,24 @@ function startArena() {
     document.getElementById("arena-hud").classList.remove("hidden");
     updateRoundDisplay();
     updatePlayerHUD();
+    
+    // Initialize voice detection
+    initVoiceDetection();
+    
+    // Initialize remote button connection
+    if (typeof remoteManager !== 'undefined') {
+        remoteManager.init(() => {
+            console.log('Remote submission triggered');
+            registerSubmission();
+        });
+    }
+    
+    // Start round timer
+    startRoundTimer();
+    
+    // Start first move
+    selectNextMove();
+}
     initVoiceDetection();
     
     // Start 5-minute round timer
@@ -352,6 +370,13 @@ function startMoveTimer(duration) {
 // ============================================
 
 function applyMoveDamage(moveObj) {
+    // PRACTICE MODE: No damage applied
+    if (GameState.practiceMode) {
+        console.log('Practice mode - no damage applied');
+        document.getElementById("match-status").innerText = "PRACTICE MODE - NO DAMAGE";
+        return;
+    }
+    
     const attacker = GameState[GameState.currentAttacker];
     const defender = GameState[GameState.currentAttacker === "wayne" ? "cindy" : "wayne"];
     const defenderName = GameState.currentAttacker === "wayne" ? "cindy" : "wayne";
