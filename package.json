@@ -1,7 +1,11 @@
 {
   "name": "ucwgame",
-  "version": "1.0.0",
+  "version": "2.1.0",
+  "description": "Ultimate Couple Wrestling Game with Mobile & Remote Support",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
     "generate-sw-assets": "node tools/generate_sw_assets.js",
     "prepare": "git config core.hooksPath .githooks || true",
     "test": "playwright test --reporter=list --workers=1"

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UCW Remote Button</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Oswald', 'Arial Black', sans-serif;
+            background: linear-gradient(135deg, #1a0033 0%, #330066 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            color: #ff1493;
+            text-shadow: 0 0 20px #ff1493, 0 0 40px #ff1493;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+        }
+
+        .status {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            margin-bottom: 40px;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status.connected {
+            color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .status.disconnected {
+            color: #ff4444;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+        }
+
+        .submit-button {
+            width: 90vw;
+            max-width: 600px;
+            height: 60vh;
+            min-height: 300px;
+            background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%);
+            border: 5px solid #fff;
+            border-radius: 30px;
+            font-size: clamp(2rem, 8vw, 5rem);
+            font-weight: bold;
+            color: white;
+            text-shadow: 
+                0 5px 10px rgba(0, 0, 0, 0.5),
+                0 0 20px #ff1493;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 
+                0 10px 30px rgba(255, 20, 147, 0.5),
+                inset 0 -10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            letter-spacing: 5px;
+            touch-action: manipulation;
+        }
+
+        .submit-button:active {
+            transform: scale(0.95);
+            box-shadow: 
+                0 5px 15px rgba(255, 20, 147, 0.7),
+                inset 0 -5px 15px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(135deg, #cc0066 0%, #ff1493 100%);
+        }
+
+        .submit-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #666;
+        }
+
+        .submit-button.disabled:active {
+            transform: none;
+        }
+
+        .submit-button .icon {
+            font-size: clamp(3rem, 10vw, 6rem);
+        }
+
+        .submit-button .label {
+            font-size: clamp(1.5rem, 6vw, 4rem);
+        }
+
+        .submit-button .sublabel {
+            font-size: clamp(0.8rem, 3vw, 1.5rem);
+            opacity: 0.8;
+            letter-spacing: 2px;
+        }
+
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(3rem, 10vw, 8rem);
+            color: #00ff00;
+            text-shadow: 
+                0 0 30px #00ff00,
+                0 0 60px #00ff00,
+                0 0 90px #00ff00;
+            pointer-events: none;
+            opacity: 0;
+            animation: fadeOut 1s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .instructions {
+            margin-top: 30px;
+            font-size: clamp(0.8rem, 2vw, 1.2rem);
+            opacity: 0.7;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        @media (orientation: landscape) {
+            .submit-button {
+                height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 UCW REMOTE 🎮</h1>
+        
+        <div id="status" class="status disconnected">
+            ⚠️ CONNECTING...
+        </div>
+
+        <button id="submitBtn" class="submit-button disabled">
+            <div class="icon">🚨</div>
+            <div class="label">SUBMIT</div>
+            <div class="sublabel">QUIT ROUND</div>
+        </button>
+
+        <div class="instructions">
+            Press the button when you want to submit/quit the current round.
+            <br>Make sure the main game is running!
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let reconnectInterval = null;
+
+        const statusEl = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}?type=remote`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('Connected to game');
+                statusEl.textContent = '✅ CONNECTED TO GAME';
+                statusEl.className = 'status connected';
+                submitBtn.classList.remove('disabled');
+                
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
+                }
+
+                // Send periodic pings
+                setInterval(() => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'ping' }));
+                    }
+                }, 30000);
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected from game');
+                statusEl.textContent = '⚠️ DISCONNECTED - RECONNECTING...';
+                statusEl.className = 'status disconnected';
+                submitBtn.classList.add('disabled');
+                
+                // Auto-reconnect
+                if (!reconnectInterval) {
+                    reconnectInterval = setInterval(() => {
+                        connect();
+                    }, 2000);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'pong') {
+                        console.log('Pong received');
+                    }
+                } catch (e) {
+                    console.error('Error parsing message:', e);
+                }
+            };
+        }
+
+        // Submit button handler
+        submitBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            if (submitBtn.classList.contains('disabled')) {
+                return;
+            }
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'submission' }));
+                
+                // Visual feedback
+                const feedback = document.createElement('div');
+                feedback.className = 'feedback';
+                feedback.textContent = 'SUBMITTED!';
+                document.body.appendChild(feedback);
+                
+                setTimeout(() => {
+                    feedback.remove();
+                }, 1000);
+
+                // Haptic feedback on mobile
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+            }
+        });
+
+        // Prevent double-tap zoom
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // Connect on load
+        connect();
+    </script>
+</body>
+</html>

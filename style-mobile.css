@@ -1,0 +1,383 @@
+/* ============================================
+   MOBILE & TABLET RESPONSIVE STYLES
+   ============================================ */
+
+/* Base mobile optimizations */
+@media screen and (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+
+    /* Make overlays mobile-friendly */
+    .overlay .content {
+        padding: 20px;
+        max-width: 95vw;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .overlay h1 {
+        font-size: clamp(1.5rem, 6vw, 2.5rem);
+    }
+
+    .overlay p {
+        font-size: clamp(0.9rem, 3vw, 1.2rem);
+    }
+
+    /* Mobile-friendly buttons */
+    .btn-remote {
+        font-size: clamp(1.2rem, 4vw, 2rem);
+        padding: 15px 40px;
+        min-height: 60px;
+    }
+
+    /* Ritual overlay */
+    .ritual-step h2 {
+        font-size: clamp(1.3rem, 5vw, 2rem);
+    }
+
+    .ritual-step p {
+        font-size: clamp(0.9rem, 3vw, 1.1rem);
+    }
+
+    .ritual-timer {
+        font-size: clamp(2rem, 8vw, 4rem);
+    }
+
+    /* Selection overlay */
+    .selection-grid {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .pick-box {
+        width: 100%;
+        font-size: clamp(1rem, 4vw, 1.5rem);
+    }
+
+    /* Arena HUD - Mobile Layout */
+    #arena-hud {
+        padding: 10px;
+    }
+
+    .tv-broadcast {
+        padding: 15px;
+    }
+
+    .broadcast-header {
+        padding: 15px;
+    }
+
+    .match-title {
+        font-size: clamp(1.2rem, 5vw, 2rem);
+    }
+
+    .round-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .round-info span {
+        font-size: clamp(0.9rem, 3.5vw, 1.3rem);
+    }
+
+    .large-timer {
+        font-size: clamp(1.5rem, 6vw, 2.5rem) !important;
+    }
+
+    /* Current move panel */
+    .move-panel {
+        padding: 15px;
+    }
+
+    .attacker-role {
+        font-size: clamp(1rem, 4vw, 1.5rem);
+    }
+
+    #active-move-name {
+        font-size: clamp(1.3rem, 5vw, 2rem);
+    }
+
+    .broadcast-image {
+        max-height: 250px;
+    }
+
+    #active-move-desc {
+        font-size: clamp(0.9rem, 3vw, 1.1rem);
+    }
+
+    .move-timer {
+        font-size: clamp(1.2rem, 4vw, 1.8rem);
+    }
+
+    /* Player stats - Stack vertically on mobile */
+    .broadcast-stats {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .player-broadcast {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .player-broadcast h3 {
+        font-size: clamp(1.3rem, 5vw, 2rem);
+    }
+
+    .stamina-label {
+        font-size: clamp(0.9rem, 3vw, 1.2rem);
+    }
+
+    .health-bar-large {
+        height: 30px;
+    }
+
+    .health-percent {
+        font-size: clamp(1rem, 4vw, 1.5rem);
+    }
+
+    .clothing-status {
+        font-size: clamp(1rem, 4vw, 1.3rem);
+    }
+
+    /* Submission controls */
+    .submission-controls {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .voice-button {
+        font-size: clamp(0.9rem, 3vw, 1.2rem);
+        padding: 15px 25px;
+    }
+
+    .giant-submit-btn {
+        min-height: 150px;
+        font-size: clamp(1.5rem, 6vw, 2.5rem);
+        padding: 20px;
+    }
+
+    /* Score tracker */
+    .score-tracker {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .score-box {
+        width: 100%;
+        font-size: clamp(1rem, 4vw, 1.5rem);
+    }
+
+    .broadcast-footer {
+        font-size: clamp(0.9rem, 3vw, 1.2rem);
+        padding: 15px;
+    }
+
+    /* Victory screen */
+    #ko-text {
+        font-size: clamp(3rem, 12vw, 6rem);
+    }
+
+    #victory-banner {
+        font-size: clamp(1.5rem, 6vw, 3rem);
+    }
+}
+
+/* Tablet landscape optimizations */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .broadcast-stats {
+        flex-direction: row;
+    }
+
+    .player-broadcast {
+        width: 48%;
+    }
+
+    .broadcast-image {
+        max-height: 350px;
+    }
+}
+
+/* Small phones */
+@media screen and (max-width: 375px) {
+    .overlay .content {
+        padding: 15px;
+    }
+
+    .btn-remote {
+        padding: 12px 30px;
+        min-height: 50px;
+    }
+
+    .ritual-timer {
+        font-size: 2.5rem;
+    }
+
+    .broadcast-image {
+        max-height: 200px;
+    }
+
+    .giant-submit-btn {
+        min-height: 120px;
+    }
+}
+
+/* Touch improvements for all mobile devices */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    button, .btn-remote {
+        min-height: 48px;
+        padding: 12px 24px;
+    }
+
+    /* Better button feedback */
+    button:active, .btn-remote:active {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+
+    /* Remove hover effects on touch */
+    button:hover, .btn-remote:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Prevent text selection during gameplay */
+    * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    /* Allow selection for inputs only */
+    input, textarea {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+    }
+}
+
+/* Landscape phone optimizations */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .broadcast-header {
+        padding: 10px;
+    }
+
+    .move-panel {
+        padding: 10px;
+    }
+
+    .broadcast-image {
+        max-height: 150px;
+    }
+
+    .player-broadcast {
+        padding: 10px;
+    }
+
+    .giant-submit-btn {
+        min-height: 100px;
+    }
+}
+
+/* QR Code and connection UI */
+.connection-panel {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #ff1493;
+    border-radius: 10px;
+    padding: 15px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+.connection-panel.minimized {
+    padding: 10px;
+}
+
+.connection-panel h3 {
+    color: #ff1493;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.connection-panel p {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.connection-panel .qr-code {
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.connection-panel .url-display {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    word-break: break-all;
+    color: #00ff00;
+    margin-bottom: 10px;
+}
+
+.connection-panel .status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.connection-panel .status-indicator.connected {
+    background: #00ff00;
+    box-shadow: 0 0 10px #00ff00;
+}
+
+.connection-panel .status-indicator.disconnected {
+    background: #ff4444;
+    box-shadow: 0 0 10px #ff4444;
+}
+
+.connection-panel .toggle-btn {
+    background: #ff1493;
+    border: none;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.connection-panel .toggle-btn:active {
+    opacity: 0.8;
+}
+
+@media screen and (max-width: 768px) {
+    .connection-panel {
+        top: 5px;
+        right: 5px;
+        max-width: 200px;
+        font-size: 0.8rem;
+    }
+
+    .connection-panel h3 {
+        font-size: 1rem;
+    }
+
+    .connection-panel p {
+        font-size: 0.75rem;
+    }
+}

@@ -1,0 +1,246 @@
+/* ============================================
+   RESPONSIVE DESIGN FOR MOBILE/TABLET
+   ============================================ */
+
+/* Base mobile styles */
+@media screen and (max-width: 768px) {
+    /* Make the broadcast view stack vertically on mobile */
+    .broadcast-body {
+        flex-direction: column;
+    }
+    
+    .broadcast-stats {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .player-broadcast {
+        width: 100% !important;
+        margin: 10px 0;
+    }
+    
+    /* Larger touch targets for mobile */
+    .giant-submit-btn {
+        min-height: 120px;
+        font-size: 2.5em;
+        width: 90%;
+        margin: 20px auto;
+    }
+    
+    /* Move panel adjustments */
+    .move-panel {
+        padding: 15px;
+    }
+    
+    .broadcast-image {
+        max-height: 250px;
+    }
+    
+    /* Font scaling */
+    .match-title {
+        font-size: 1.8em;
+    }
+    
+    h2 {
+        font-size: 1.5em;
+    }
+    
+    /* Health bars */
+    .health-bar-large {
+        height: 30px;
+        margin: 8px 0;
+    }
+    
+    /* Score tracker */
+    .score-tracker {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .score-box {
+        width: 100%;
+    }
+}
+
+/* Tablet landscape */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .broadcast-body {
+        padding: 15px;
+    }
+    
+    .broadcast-image {
+        max-height: 350px;
+    }
+    
+    .giant-submit-btn {
+        min-height: 100px;
+        font-size: 2em;
+    }
+}
+
+/* Phone portrait - very compact */
+@media screen and (max-width: 480px) {
+    .broadcast-header {
+        padding: 10px;
+    }
+    
+    .round-info {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .match-title {
+        font-size: 1.4em;
+    }
+    
+    #active-move-name {
+        font-size: 1.3em;
+    }
+    
+    .broadcast-image {
+        max-height: 200px;
+    }
+    
+    /* Stack everything */
+    .selection-grid {
+        flex-direction: column;
+    }
+    
+    .pick-box {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+/* Touch-friendly adjustments */
+@media (pointer: coarse) {
+    /* All buttons bigger for touch */
+    button, .btn-remote {
+        min-height: 60px;
+        padding: 15px 30px;
+        font-size: 1.2em;
+    }
+    
+    /* Increase tap target spacing */
+    .submission-controls {
+        padding: 20px;
+    }
+    
+    /* Better touch feedback */
+    button:active {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+}
+
+/* Device detection classes */
+body.mobile-device .phone-interface {
+    display: block !important;
+}
+
+body.mobile-device .tv-broadcast {
+    padding: 10px;
+}
+
+body.tablet-device .broadcast-body {
+    max-width: 100%;
+}
+
+body.tv-device .tv-broadcast {
+    /* Optimize for large screens */
+    min-height: 100vh;
+}
+
+/* Remote controller mode */
+.remote-controller-mode {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a0033 0%, #330066 100%);
+}
+
+.remote-controller-mode .controller-container {
+    text-align: center;
+    padding: 30px;
+}
+
+.remote-controller-mode .giant-submit-btn {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    font-size: 3em;
+    background: linear-gradient(135deg, #ff1493 0%, #ff0066 100%);
+    border: 5px solid white;
+    box-shadow: 0 0 40px rgba(255, 20, 147, 0.8);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.remote-controller-mode .giant-submit-btn:active {
+    transform: scale(0.9);
+    box-shadow: 0 0 60px rgba(255, 20, 147, 1);
+}
+
+.remote-controller-mode .connection-status {
+    margin-top: 30px;
+    font-size: 1.5em;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 20, 147, 0.8);
+}
+
+/* QR Code display */
+.qr-code-container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    display: inline-block;
+    margin: 20px auto;
+}
+
+.qr-code-container canvas {
+    display: block;
+}
+
+/* Mode selector */
+.mode-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.mode-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #ff1493;
+    border-radius: 15px;
+    padding: 30px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.mode-card:hover {
+    background: rgba(255, 20, 147, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(255, 20, 147, 0.4);
+}
+
+.mode-card h3 {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    color: #ff1493;
+    text-shadow: 0 0 10px rgba(255, 20, 147, 0.8);
+}
+
+.mode-card p {
+    color: #fff;
+    line-height: 1.6;
+}
+
+.mode-card .mode-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
