@@ -152,13 +152,11 @@ const GameModes = {
         // Show intro or ritual based on mode
         if (mode.settings.practiceMode) {
             // Skip ritual in practice mode
-            document.getElementById('intro-overlay').classList.add('hidden');
             if (typeof startArena === 'function') {
                 startArena();
             }
         } else {
             // Normal flow - go to ritual
-            document.getElementById('intro-overlay').classList.add('hidden');
             if (typeof initGame === 'function') {
                 initGame();
             }
@@ -249,8 +247,6 @@ const GameModes = {
         document.getElementById('custom-settings-overlay').remove();
         const startScreen = document.getElementById('start-screen');
         if (startScreen) startScreen.classList.add('hidden');
-        const introOverlay = document.getElementById('intro-overlay');
-        if (introOverlay) introOverlay.classList.add('hidden');
         
         if (practiceMode && typeof startArena === 'function') {
             startArena();
@@ -266,8 +262,6 @@ window.startGame = function() {
     // Hide start screen
     const startScreen = document.getElementById('start-screen');
     if (startScreen) startScreen.classList.add('hidden');
-    const introOverlay = document.getElementById('intro-overlay');
-    if (introOverlay) introOverlay.classList.add('hidden');
     
     // Show mode selector instead of going straight to ritual
     // (arena-hud will be shown later by startArena())
