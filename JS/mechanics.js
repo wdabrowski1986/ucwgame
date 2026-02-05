@@ -287,27 +287,35 @@ function updateRoundDisplay() {
 
 function selectNextMove() {
     const attacker = GameState[GameState.currentAttacker];
-    const moves = getMovesByAttacker(GameState.currentAttacker);
+    const allMoves = getMovesByAttacker(GameState.currentAttacker);
+    
+    console.log(`Selecting move for ${GameState.currentAttacker}, found ${allMoves.length} moves`);
     
     // 20% chance to use sensual move (Love-Drunk Trap tracking)
     const useSensual = Math.random() < 0.2;
-    const availableMoves = moves.filter(m => 
+    const availableMoves = allMoves.filter(m => 
         useSensual ? m.type === "sensual" : m.type !== "sensual"
     );
     
     // Fallback if no sensual moves available
     if (availableMoves.length === 0) {
-        const availableMoves = moves.filter(m => m.type !== "sensual");
-        const selectedMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        const fallbackMoves = allMoves.filter(m => m.type !== "sensual");
+        const selectedMove = fallbackMoves[Math.floor(Math.random() * fallbackMoves.length)];
+        console.log('Selected move (fallback):', selectedMove.name);
         executeMove(selectedMove);
         return;
     }
     
     const selectedMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    console.log('Selected move:', selectedMove.name);
     executeMove(selectedMove);
 }
 
 function getMovesByAttacker(attacker) {
+    if (typeof moves === 'undefined') {
+        console.error('Moves array not loaded!');
+        return [];
+    }
     return moves.filter(m => m.attacker === null || m.attacker === attacker);
 }
 
