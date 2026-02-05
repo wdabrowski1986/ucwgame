@@ -9,6 +9,8 @@ class RemoteConnectionManager {
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 2000;
         this.onSubmissionCallback = null;
+        this.isStaticHosting = window.location.hostname.includes('github.io') || 
+                               window.location.protocol === 'https:';
     }
 
     // Initialize connection
@@ -52,7 +54,12 @@ class RemoteConnectionManager {
                 this.remoteConnected = false;
                 this.updateConnectionUI(false);
                 
-                // Try to reconnect (silently on static hosting)
+                // Don't retry on static hosting
+                if (this.isStaticHosting) {
+                    return;
+                }
+                
+                // Try to reconnect
                 if (this.reconnectAttempts < this.maxReconnectAttempts) {
                     this.reconnectAttempts++;
                     setTimeout(() => {
