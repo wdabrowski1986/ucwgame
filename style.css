@@ -36,6 +36,19 @@ body::before {
 .overlay.visible { display: flex !important; }
 .visible { display: block !important; }
 
+#start-screen {
+    background: linear-gradient(135deg, rgba(10, 10, 10, 0.7) 0%, rgba(26, 0, 51, 0.7) 50%, rgba(15, 0, 21, 0.7) 100%), url('images/ring-bg.jpg') center/cover;
+    background-blend-mode: multiply;
+}
+
+#start-screen .content {
+    background: transparent;
+    padding: 40px;
+    border-radius: 20px;
+    border: 2px solid var(--glow-pink);
+    box-shadow: 0 0 50px rgba(255, 20, 147, 0.4);
+}
+
 #intro-overlay {
     background: linear-gradient(135deg, rgba(10, 10, 10, 0.7) 0%, rgba(26, 0, 51, 0.7) 50%, rgba(15, 0, 21, 0.7) 100%), url('images/ring-bg.jpg') center/cover;
     background-blend-mode: multiply;
