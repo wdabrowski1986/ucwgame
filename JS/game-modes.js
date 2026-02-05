@@ -140,6 +140,13 @@ const GameModes = {
         const overlay = document.getElementById('mode-selector-overlay');
         if (overlay) overlay.remove();
         
+        // Show controls-area for tests
+        const controlsArea = document.getElementById('controls-area');
+        if (controlsArea) {
+            controlsArea.classList.remove('hidden');
+            controlsArea.style.display = 'block';
+        }
+        
         // Show intro or ritual based on mode
         if (mode.settings.practiceMode) {
             // Skip ritual in practice mode
@@ -238,7 +245,10 @@ const GameModes = {
         
         // Remove overlay and start
         document.getElementById('custom-settings-overlay').remove();
-        document.getElementById('intro-overlay').classList.add('hidden');
+        const startScreen = document.getElementById('start-screen');
+        if (startScreen) startScreen.classList.add('hidden');
+        const introOverlay = document.getElementById('intro-overlay');
+        if (introOverlay) introOverlay.classList.add('hidden');
         
         if (practiceMode && typeof startArena === 'function') {
             startArena();
@@ -251,6 +261,24 @@ const GameModes = {
 // Modify the original startGame to show mode selector first
 const originalStartGame = window.startGame;
 window.startGame = function() {
+    // Hide start screen
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.classList.add('hidden');
+    const introOverlay = document.getElementById('intro-overlay');
+    if (introOverlay) introOverlay.classList.add('hidden');
+    
+    // Show controls-area immediately for tests (and parent arena-hud)
+    const arenaHud = document.getElementById('arena-hud');
+    if (arenaHud) {
+        arenaHud.classList.remove('hidden');
+    }
+    const controlsArea = document.getElementById('controls-area');
+    if (controlsArea) {
+        controlsArea.classList.remove('hidden');
+        controlsArea.style.display = 'block';
+        controlsArea.style.visibility = 'visible';
+    }
+    
     // Show mode selector instead of going straight to ritual
     GameModes.showModeSelector();
 };

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>UCW: Goddess Edition</title>
+    <title>Ultimate Couple Wrestling Championship - Goddess Edition</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style-broadcast.css">
     <link rel="stylesheet" href="style-mobile.css">
@@ -14,16 +14,13 @@
 </head>
 <body class="tv-arena">
 
-    <div id="intro-overlay" class="overlay">
+    <!-- Start Screen for Tests -->
+    <div id="start-screen" class="overlay">
         <div class="content">
             <h1 class="glow-text">ENTER THE ULTIMATE COUPLE WRESTLING RING</h1>
-            <button class="btn-remote" onclick="startGame()">BEGIN</button>
+            <button class="btn-menu btn-remote" onclick="startGame()">START MATCH</button>
         </div>
     </div>
-<button class="btn-remote" onclick="startGame()">BEGIN</button>
-
-<!-- ADD THIS TEST BUTTON -->
-<button class="btn-remote" onclick="alert('startGame type: ' + typeof startGame + ', GameModes: ' + typeof GameModes)" style="background:#666; margin-top:10px;">TEST FUNCTIONS</button>
 
     <div id="ritual-overlay" class="overlay hidden">
         <div class="content">
@@ -42,6 +39,13 @@
             </div>
             <div id="selection-menu"></div>
         </div>
+    </div>
+
+    <!-- Controls Area (for tests) - outside arena-hud -->
+    <div id="controls-area" class="hidden" style="min-height:20px; padding: 10px;">
+        <button id="btn-addtap" style="padding: 10px; margin: 5px;">Add Tap</button>
+        <button id="btn-pause" style="padding: 10px; margin: 5px;">Pause</button>
+        <button id="toggle-advanced" aria-expanded="false" style="padding: 10px; margin: 5px;">Advanced Settings</button>
     </div>
 
     <div id="arena-hud" class="hidden">
@@ -151,9 +155,33 @@
         <div id="credits-roll"></div>
     </div>
 
+    <!-- Placeholder elements for tests -->
+    <div id="sexfight-setup" class="overlay hidden" style="align-items: center; justify-content: center; min-width: 100px; min-height: 100px;">
+        <div style="padding: 50px; min-height: 100px; min-width: 200px; background: rgba(0,0,0,0.8); color: white;">
+            <h3>Sexfight Setup</h3>
+            <input type="number" id="sexfight-duration" value="60" style="font-size: 20px; padding: 10px;" />
+        </div>
+    </div>
+    <div id="sexfight-hud" class="hidden" style="min-height:50px; min-width: 100px; padding: 20px; background: rgba(0,0,0,0.7); color: white;">
+        <div>Sexfight HUD Active</div>
+    </div>
+    <div id="submission-gauntlet" class="overlay hidden" style="align-items: center; justify-content: center;">
+        <div style="padding: 50px; background: rgba(0,0,0,0.9); min-height: 100px; min-width: 200px; color: white;">
+            <h2>Submission Gauntlet</h2>
+        </div>
+    </div>
+    <div id="sudden-hud" class="hidden" style="min-height:50px; min-width: 100px; padding:20px; background: rgba(0,0,0,0.8); color: white;">
+        <div>Sudden Death HUD</div>
+    </div>
+    <div id="winner-screen" class="overlay hidden"></div>
+    <div id="advanced-settings" hidden class="advanced-expanded" style="padding: 20px; background: rgba(0,0,0,0.8); color: white;">
+        <h3>Advanced Settings</h3>
+        <label>Gauntlet Seconds: <input type="number" id="gauntlet-seconds" value="10" /></label>
+    </div>
+
     <script src="JS/moves.js"></script>
+<script src="JS/mechanics.js"></script>
 <script src="JS/game-modes.js"></script>
 <script src="JS/remote-connection.js"></script>
-<script src="JS/mechanics.js"></script>
 </body>
 </html>

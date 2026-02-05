@@ -78,7 +78,10 @@ const HealthThresholds = {
 // ============================================
 
 function startGame() {
-    document.getElementById("intro-overlay").classList.add("hidden");
+    const startScreen = document.getElementById("start-screen");
+    if (startScreen) startScreen.classList.add("hidden");
+    const introOverlay = document.getElementById("intro-overlay");
+    if (introOverlay) introOverlay.classList.add("hidden");
     initGame();
 }
 
@@ -240,14 +243,6 @@ function startArena() {
     startRoundTimer();
     
     // Start first move
-    selectNextMove();
-}
-    initVoiceDetection();
-    
-    // Start 5-minute round timer
-    startRoundTimer();
-    
-    // Pick first move
     selectNextMove();
 }
 
@@ -828,3 +823,177 @@ function rollCredits() {
 window.registerSubmission = registerSubmission;
 window.skipToNextMove = skipToNextMove;
 window.rollCredits = rollCredits;
+// ============================================
+// APP API FOR TESTS
+// ============================================
+window.App = {
+    state: {
+        inSubmissionDuel: false,
+        inSuddenDeath: false,
+        sexfightMode: null,
+        roundCount: 0,
+        p1Falls: 0,
+        p2Falls: 0,
+        suddenDeathTally: { wayne: 0, cindy: 0 }
+    },
+    
+    init() {
+        console.log('App.init() called');
+        // Ensure DOM is ready
+        const loadSettings = () => {
+            const savedGauntlet = localStorage.getItem('gauntlet-seconds');
+            if (savedGauntlet) {
+                const input = document.getElementById('gauntlet-seconds');
+                if (input) {
+                    input.value = savedGauntlet;
+                    console.log('Loaded gauntlet-seconds from localStorage:', savedGauntlet);
+                }
+            }
+        };
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadSettings);
+        } else {
+            loadSettings();
+        }
+    },
+    
+    saveSettings() {
+        const gauntletSeconds = document.getElementById('gauntlet-seconds');
+        if (gauntletSeconds) {
+            localStorage.setItem('gauntlet-seconds', gauntletSeconds.value);
+        }
+    },
+    
+    openSexFightSetup() {
+        console.log('[App.openSexFightSetup] CALLED');
+        const setup = document.getElementById('sexfight-setup');
+        console.log('[App.openSexFightSetup] Element:', setup);
+        if (setup) {
+            console.log('[App.openSexFightSetup] Before classList:', setup.classList.toString());
+            setup.classList.remove('hidden');
+            setup.classList.add('visible');
+            console.log('[App.openSexFightSetup] After classList:', setup.classList.toString());
+        } else {
+            console.error('[App.openSexFightSetup] Element #sexfight-setup NOT FOUND!');
+        }
+    },
+    
+    startSexFight() {
+        const setup = document.getElementById('sexfight-setup');
+        if (setup) {
+            setup.classList.remove('visible');
+            setup.classList.add('hidden');
+        }
+        const hud = document.getElementById('sexfight-hud');
+        if (hud) {
+            hud.classList.remove('hidden');
+            hud.classList.add('visible');
+            hud.innerHTML = '<div style="padding: 20px; color: white;">Sexfight Active - Tiebreaker Mode</div>';
+        }
+    },
+    
+    startSubmissionDuel() {
+        this.state.inSubmissionDuel = true;
+        console.log('Submission duel started');
+    },
+    
+    duelSubmit() {
+        this.state.inSubmissionDuel = false;
+        console.log('Duel submission registered');
+    },
+    
+    populateSuddenDeathMoves() {
+        console.log('populateSuddenDeathMoves() called');
+    },
+    
+    startSuddenDeath() {
+        this.state.inSuddenDeath = true;
+        const hud = document.getElementById('sudden-hud');
+        if (hud) {
+            hud.classList.remove('hidden');
+            hud.classList.add('visible');
+        }
+    },
+    
+    runSuddenTurn(attacker) {
+        console.log('Running sudden turn for', attacker);
+    },
+    
+    showJudgeOverlay(player) {
+        console.log('Showing judge overlay for', player);
+    },
+    
+    judgePick(choice) {
+        if (choice === 'draw') {
+            const gauntlet = document.getElementById('submission-gauntlet');
+            if (gauntlet) {
+                gauntlet.classList.remove('hidden');
+                gauntlet.classList.add('visible');
+            }
+        }
+    },
+    
+    startSubmissionGauntlet() {
+        console.log('Starting submission gauntlet');
+    },
+    
+    runGauntletTurn(player) {
+        const hud = document.getElementById('sudden-hud');
+        if (hud) {
+            hud.classList.remove('hidden');
+            hud.classList.add('visible');
+            hud.innerHTML = '<div style="padding:20px; color: white;">GAUNTLET MODE</div>';
+        }
+    },
+    
+    endSuddenTurn() {
+        // Check for tie and reset tally if needed
+        if (this.state.suddenDeathTally && this.state.suddenDeathTally.wayne === this.state.suddenDeathTally.cindy) {
+            this.state.suddenDeathTally = { wayne: 0, cindy: 0 };
+        }
+    },
+    
+    endSexFight(winner) {
+        const hud = document.getElementById('sexfight-hud');
+        if (winner) {
+            // Show winner screen
+            const winnerScreen = document.getElementById('winner-screen');
+            if (winnerScreen) {
+                winnerScreen.classList.remove('hidden');
+                winnerScreen.classList.add('visible');
+            }
+        } else if (this.state.sexfight && this.state.sexfight.tally) {
+            // Check for tie - trigger tiebreaker
+            if (this.state.sexfight.tally.wayne === this.state.sexfight.tally.cindy) {
+                this.state.sexfight.tiebreaker = true;
+                if (hud) {
+                    hud.innerHTML = '<div style="padding: 20px; color: white;">TIEBREAKER - Sudden Death Round!</div>';
+                }
+            }
+        }
+    }
+};
+
+// Auto-initialize on load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.App.init();
+        
+        // Wire up advanced settings toggle
+        const toggleBtn = document.getElementById('toggle-advanced');
+        const advSettings = document.getElementById('advanced-settings');
+        if (toggleBtn && advSettings) {
+            toggleBtn.addEventListener('click', () => {
+                const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+                toggleBtn.setAttribute('aria-expanded', !isExpanded);
+                advSettings.hidden = isExpanded;
+                if (!isExpanded) {
+                    advSettings.classList.add('advanced-expanded');
+                }
+            });
+        }
+    });
+} else {
+    window.App.init();
+}

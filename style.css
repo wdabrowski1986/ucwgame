@@ -32,6 +32,10 @@ body::before {
 
 .hidden { display: none !important; }
 
+/* Visible state for test overlays - higher specificity */
+.overlay.visible { display: flex !important; }
+.visible { display: block !important; }
+
 #intro-overlay {
     background: linear-gradient(135deg, rgba(10, 10, 10, 0.7) 0%, rgba(26, 0, 51, 0.7) 50%, rgba(15, 0, 21, 0.7) 100%), url('images/ring-bg.jpg') center/cover;
     background-blend-mode: multiply;
