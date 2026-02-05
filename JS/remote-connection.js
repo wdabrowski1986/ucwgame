@@ -24,7 +24,6 @@ class RemoteConnectionManager {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}?type=game`;
             
-            console.log('Connecting to WebSocket server...');
             this.ws = new WebSocket(wsUrl);
 
             this.ws.onopen = () => {
@@ -50,22 +49,21 @@ class RemoteConnectionManager {
             };
 
             this.ws.onclose = () => {
-                console.log('❌ Disconnected from remote button server');
                 this.remoteConnected = false;
                 this.updateConnectionUI(false);
                 
-                // Try to reconnect
+                // Try to reconnect (silently on static hosting)
                 if (this.reconnectAttempts < this.maxReconnectAttempts) {
                     this.reconnectAttempts++;
                     setTimeout(() => {
-                        console.log(`Reconnect attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
                         this.connect();
                     }, this.reconnectDelay);
                 }
             };
 
             this.ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
+                // Silently fail on GitHub Pages (no WebSocket support)
+                console.log('WebSocket not available (expected on static hosting)');
             };
 
         } catch (e) {

@@ -234,12 +234,16 @@ function startArena() {
     // Initialize voice detection
     initVoiceDetection();
     
-    // Initialize remote button connection
+    // Initialize remote button connection (optional - won't work on GitHub Pages)
     if (typeof remoteManager !== 'undefined') {
-        remoteManager.init(() => {
-            console.log('Remote submission triggered');
-            registerSubmission();
-        });
+        try {
+            remoteManager.init(() => {
+                console.log('Remote submission triggered');
+                registerSubmission();
+            });
+        } catch (e) {
+            console.log('Remote connection not available (expected on GitHub Pages)');
+        }
     }
     
     // Start round timer
@@ -421,7 +425,7 @@ function applyMoveDamage(moveObj) {
         // Cindy has high damage but uses stamina (Red Damage bar)
         attacker.redDamage = Math.max(0, attacker.redDamage - (moveObj.type === "sensual" ? 10 : 30));
         
-        let damage = moveObj.damage || 20;
+        damage = moveObj.damage || 20;
         
         // Sensual moves heal defender
         if (moveObj.type === "sensual") {
@@ -702,7 +706,8 @@ function initVoiceDetection() {
         let finalTranscript = '';
         
         for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i].transcript.toLowerCase();
+            if (!event.results[i] || !event.results[i][0]) continue;
+            const transcript = event.results[i][0].transcript.toLowerCase();
             
             if (event.results[i].isFinal) {
                 finalTranscript += transcript + " ";
