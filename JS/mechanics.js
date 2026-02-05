@@ -216,7 +216,10 @@ function advanceRitual() {
     } else {
         // All rituals complete - unlock Final Stand mode and start arena
         GameState.finalStandUnlocked = true;
-        document.getElementById("ritual-overlay").classList.add("hidden");
+        const ritualOverlay = document.getElementById("ritual-overlay");
+        ritualOverlay.classList.add("hidden");
+        ritualOverlay.classList.remove("visible");
+        ritualOverlay.style.display = "none";
         startArena();
     }
 }
@@ -372,6 +375,12 @@ function startMoveTimer(duration) {
 // ============================================
 
 function applyMoveDamage(moveObj) {
+    // Don't apply damage if round isn't active yet
+    if (!GameState.roundActive) {
+        console.log('Round not active - skipping damage');
+        return;
+    }
+    
     // PRACTICE MODE: No damage applied
     if (GameState.practiceMode) {
         console.log('Practice mode - no damage applied');
