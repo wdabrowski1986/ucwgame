@@ -144,6 +144,7 @@ function showRitualOverlay() {
     const ritualOverlay = document.getElementById("ritual-overlay");
     ritualOverlay.classList.remove("hidden");
     ritualOverlay.classList.add("visible");
+    ritualOverlay.style.display = "flex";
     
     // Start ritual timer
     startRitualTimer(ritualSteps[0].timer);

@@ -85,7 +85,8 @@ const GameModes = {
         // Create mode selector overlay
         const overlay = document.createElement('div');
         overlay.id = 'mode-selector-overlay';
-        overlay.className = 'overlay';
+        overlay.className = 'overlay visible';
+        overlay.style.display = 'flex';
         overlay.innerHTML = `
             <div class="content">
                 <h1 class="glow-text">SELECT GAME MODE</h1>
