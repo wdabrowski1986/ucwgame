@@ -141,7 +141,9 @@ function showRitualOverlay() {
         </div>
     `;
     ritualText.dataset.step = "0";
-    document.getElementById("ritual-overlay").classList.remove("hidden");
+    const ritualOverlay = document.getElementById("ritual-overlay");
+    ritualOverlay.classList.remove("hidden");
+    ritualOverlay.classList.add("visible");
     
     // Start ritual timer
     startRitualTimer(ritualSteps[0].timer);
