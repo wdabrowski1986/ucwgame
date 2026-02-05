@@ -44,6 +44,7 @@ const GameState = {
     roundActive: false,
     currentAttacker: "wayne",
     roundTimer: 300,               // 5 minutes = 300 seconds
+    roundTimerInterval: null,      // Store interval ID
     moveActive: false,
     activeMoveTimer: 0,
     activeMoveObj: null,
@@ -259,12 +260,18 @@ function startArena() {
 function startRoundTimer() {
     GameState.roundTimer = 300; // 5 minutes
     
-    const timerInterval = setInterval(() => {
+    // Clear any existing timer
+    if (GameState.roundTimerInterval) {
+        clearInterval(GameState.roundTimerInterval);
+    }
+    
+    GameState.roundTimerInterval = setInterval(() => {
         GameState.roundTimer--;
         updateTimerDisplay();
         
         if (GameState.roundTimer <= 0) {
-            clearInterval(timerInterval);
+            clearInterval(GameState.roundTimerInterval);
+            GameState.roundTimerInterval = null;
             endRound();
         }
     }, 1000);
@@ -362,10 +369,24 @@ function startMoveTimer(duration) {
             // Apply damage
             applyMoveDamage(GameState.activeMoveObj);
             
-            // Move ends - wait for next submission or auto-move
+            // Move ends - switch attacker
             GameState.moveActive = false;
             
-            // Check if attacker should switch (alternating)
+            // Switch attacker (alternating turns)
+            GameState.currentAttacker = GameState.currentAttacker === "wayne" ? "cindy" : "wayne";
+            console.log(`Switched attacker to ${GameState.currentAttacker}`);
+            
+            // Wait 2 seconds then start next move
+            setTimeout(() => {
+                if (GameState.roundActive) {
+                    selectNextMove();
+                }
+            }, 2000);
+        }
+    }, 1000);
+}
+
+function applyMoveDamage(moveObj) {
             GameState.currentAttacker = GameState.currentAttacker === "wayne" ? "cindy" : "wayne";
             
             // Select next move
