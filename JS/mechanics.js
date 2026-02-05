@@ -382,6 +382,7 @@ function applyMoveDamage(moveObj) {
     const attacker = GameState[GameState.currentAttacker];
     const defender = GameState[GameState.currentAttacker === "wayne" ? "cindy" : "wayne"];
     const defenderName = GameState.currentAttacker === "wayne" ? "cindy" : "wayne";
+    let damage = 0; // Initialize damage variable here
     
     // ===== WAYNE'S MOVE CALCULATION =====
     if (GameState.currentAttacker === "wayne") {
@@ -390,7 +391,7 @@ function applyMoveDamage(moveObj) {
             attacker.blueStamina = Math.max(0, attacker.blueStamina - (moveObj.type === "sensual" ? 5 : 15));
         }
         
-        let damage = moveObj.damage || 10;
+        damage = moveObj.damage || 10;
         
         // Apply focus bonus from ritual (Energizer Bunny's precision)
         if (attacker.focusBonus && (moveObj.type === "challenge" || moveObj.type === "strike")) {
