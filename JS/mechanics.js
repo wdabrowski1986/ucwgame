@@ -493,10 +493,8 @@ function applyMoveDamage(moveObj) {
     // Apply damage to defender
     defender.hp = Math.max(0, Math.min(100, defender.hp - damage));
     
-    // Check if IRL challenge move
-    if (moveObj.isIRLChallenge) {
-        triggerIRLChallenge(moveObj);
-    }
+    // Skip IRL challenges - just apply damage normally
+    // (Removed IRL challenge popup for streamlined gameplay)
     
     // Check for Boop System (Cindy's strikes stun Wayne)
     if (GameState.currentAttacker === "cindy" && moveObj.type === "strike") {
