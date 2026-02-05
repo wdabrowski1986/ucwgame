@@ -369,19 +369,12 @@ function startMoveTimer(duration) {
             // Apply damage
             applyMoveDamage(GameState.activeMoveObj);
             
-            // Move ends - switch attacker
+            // Move ends - now waiting for submission
             GameState.moveActive = false;
             
-            // Switch attacker (alternating turns)
-            GameState.currentAttacker = GameState.currentAttacker === "wayne" ? "cindy" : "wayne";
-            console.log(`Switched attacker to ${GameState.currentAttacker}`);
-            
-            // Wait 2 seconds then start next move
-            setTimeout(() => {
-                if (GameState.roundActive) {
-                    selectNextMove();
-                }
-            }, 2000);
+            // Update display to show waiting for submission
+            document.getElementById("active-move-name").innerText = "WAITING FOR SUBMISSION...";
+            document.getElementById("move-countdown").innerText = "Tap to Submit";
         }
     }, 1000);
 }
@@ -782,18 +775,18 @@ function initVoiceDetection() {
 function registerSubmission(winner = null) {
     if (!GameState.roundActive) return;
     
-    // Determine winner based on who has higher HP
-    if (!winner) {
-        winner = GameState.wayne.hp > GameState.cindy.hp ? "wayne" : "cindy";
-    }
+    console.log(`Submission registered - continuing match`);
     
-    const loser = winner === "wayne" ? "cindy" : "wayne";
-    GameState.roundSubmissions++;
+    // Switch attacker for next move
+    GameState.currentAttacker = GameState.currentAttacker === "wayne" ? "cindy" : "wayne";
+    console.log(`Switched attacker to ${GameState.currentAttacker}`);
     
-    console.log(`${winner.toUpperCase()} wins submission!`);
-    
-    // Award round if this is the final submission or time is up
-    endRound(winner);
+    // Start next move after brief delay
+    setTimeout(() => {
+        if (GameState.roundActive) {
+            selectNextMove();
+        }
+    }, 1500);
 }
 
 // ============================================
