@@ -109,7 +109,10 @@ class RemoteConnectionManager {
     updateRemoteURL() {
         const protocol = window.location.protocol;
         const host = window.location.host;
-        const remoteUrl = `${protocol}//${host}/remote.html`;
+        const pathname = window.location.pathname;
+        // Get the directory path (remove index.html or trailing filename if present)
+        const basePath = pathname.substring(0, pathname.lastIndexOf('/') + 1);
+        const remoteUrl = `${protocol}//${host}${basePath}remote.html`;
         
         const urlDisplay = document.getElementById('remote-url');
         if (urlDisplay) {
