@@ -771,7 +771,198 @@ body::before {
         font-size: 1.5rem;
     }
 }
+/* ==============================
+   LARGE SCREENS & TV OPTIMIZATION
+   ============================== */
 
+/* Large desktops and TVs */
+@media (min-width: 1440px) {
+    .overlay h1 {
+        font-size: 3rem;
+    }
+    
+    .overlay p {
+        font-size: 1.5rem;
+    }
+    
+    .stats-bar {
+        padding: 60px;
+    }
+    
+    .player-hud {
+        padding: 25px;
+    }
+    
+    .player-hud h2 {
+        font-size: 2rem;
+    }
+    
+    .bar {
+        max-width: 400px;
+        height: 40px;
+    }
+    
+    .btn-move {
+        padding: 20px;
+        font-size: 1.2rem;
+    }
+    
+    .btn-remote,
+    .btn-speech {
+        padding: 20px 40px;
+        font-size: 1.4rem;
+    }
+    
+    #move-display {
+        padding: 50px;
+        max-width: 700px;
+    }
+    
+    #move-display h1 {
+        font-size: 3rem;
+    }
+    
+    #move-display img {
+        max-width: 500px;
+    }
+    
+    #move-display p {
+        font-size: 1.2rem;
+    }
+    
+    #timer-display {
+        font-size: 3rem;
+    }
+    
+    #ko-text {
+        font-size: 6rem;
+    }
+    
+    #victory-banner {
+        font-size: 3rem;
+    }
+    
+    #speech-display {
+        font-size: 1.8rem;
+        padding: 30px;
+    }
+    
+    .ko-container {
+        padding: 60px;
+    }
+    
+    .finisher-card {
+        padding: 25px;
+    }
+    
+    .finisher-card img {
+        height: 200px;
+    }
+}
+
+/* Extra large screens (4K TVs, Ultra-wide monitors) */
+@media (min-width: 2560px) {
+    .overlay h1 {
+        font-size: 4rem;
+    }
+    
+    .overlay p {
+        font-size: 2rem;
+        line-height: 1.6;
+    }
+    
+    .stats-bar {
+        padding: 80px;
+    }
+    
+    .player-hud {
+        padding: 40px;
+    }
+    
+    .player-hud h2 {
+        font-size: 2.5rem;
+    }
+    
+    .bar {
+        max-width: 500px;
+        height: 50px;
+    }
+    
+    .btn-move {
+        padding: 25px;
+        font-size: 1.5rem;
+    }
+    
+    .btn-remote,
+    .btn-speech,
+    .btn-finisher-select {
+        padding: 25px 50px;
+        font-size: 1.8rem;
+    }
+    
+    #move-display {
+        padding: 70px;
+        max-width: 1000px;
+    }
+    
+    #move-display h1 {
+        font-size: 4rem;
+    }
+    
+    #move-display img {
+        max-width: 700px;
+    }
+    
+    #move-display p {
+        font-size: 1.5rem;
+    }
+    
+    #timer-display {
+        font-size: 4rem;
+    }
+    
+    #ko-text {
+        font-size: 8rem;
+    }
+    
+    #victory-banner {
+        font-size: 4rem;
+    }
+    
+    #speech-display {
+        font-size: 2.5rem;
+        padding: 50px;
+    }
+    
+    .ko-container {
+        padding: 80px;
+    }
+    
+    .finisher-section h3 {
+        font-size: 2.5rem;
+    }
+    
+    .finisher-card {
+        padding: 30px;
+    }
+    
+    .finisher-card img {
+        height: 300px;
+    }
+    
+    .finisher-card h4 {
+        font-size: 1.5rem;
+    }
+    
+    .finisher-card p {
+        font-size: 1.2rem;
+    }
+    
+    #remote-menu {
+        padding: 25px;
+        max-height: 300px;
+    }
+}
 /* Landscape orientation optimization */
 @media (max-height: 500px) and (orientation: landscape) {
     .overlay .content,
