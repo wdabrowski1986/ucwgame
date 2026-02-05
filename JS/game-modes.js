@@ -9,7 +9,7 @@ const GameModes = {
         quickMatch: {
             name: "Quick Match",
             icon: "⚡",
-            description: "Single round, 3 minutes, fast and intense",
+            description: "Single round, 5 minutes, fast and intense",
             settings: {
                 rounds: 1,
                 roundDuration: 180,
