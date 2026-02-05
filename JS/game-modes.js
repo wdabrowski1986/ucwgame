@@ -140,7 +140,8 @@ const GameModes = {
         const overlay = document.getElementById('mode-selector-overlay');
         if (overlay) overlay.remove();
         
-        // Show controls-area for tests
+        // Don't show arena-hud yet - it will be shown by startArena()
+        // Just ensure controls-area is visible for tests
         const controlsArea = document.getElementById('controls-area');
         if (controlsArea) {
             controlsArea.classList.remove('hidden');
@@ -155,7 +156,7 @@ const GameModes = {
                 startArena();
             }
         } else {
-            // Normal flow
+            // Normal flow - go to ritual
             document.getElementById('intro-overlay').classList.add('hidden');
             if (typeof initGame === 'function') {
                 initGame();
@@ -267,19 +268,8 @@ window.startGame = function() {
     const introOverlay = document.getElementById('intro-overlay');
     if (introOverlay) introOverlay.classList.add('hidden');
     
-    // Show controls-area immediately for tests (and parent arena-hud)
-    const arenaHud = document.getElementById('arena-hud');
-    if (arenaHud) {
-        arenaHud.classList.remove('hidden');
-    }
-    const controlsArea = document.getElementById('controls-area');
-    if (controlsArea) {
-        controlsArea.classList.remove('hidden');
-        controlsArea.style.display = 'block';
-        controlsArea.style.visibility = 'visible';
-    }
-    
     // Show mode selector instead of going straight to ritual
+    // (arena-hud will be shown later by startArena())
     GameModes.showModeSelector();
 };
 
